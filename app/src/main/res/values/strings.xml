@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FreshTrack</string>
+    <string name="title">Food Expiration Tracker</string>
+    <string name="add">Add Food Item</string>
+</resources>

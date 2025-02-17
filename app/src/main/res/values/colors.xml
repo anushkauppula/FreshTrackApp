@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic Colors -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#808080</color>
+    <color name="light_gray">#D3D3D3</color>
+    <color name="dark_gray">#A9A9A9</color>
+    <color name="dim_gray">#696969</color>
+    <color name="silver">#C0C0C0</color>
+
+    <!-- Red Shades -->
+    <color name="red">#FF0000</color>
+    <color name="dark_red">#8B0000</color>
+    <color name="light_red">#FF6666</color>
+    <color name="crimson">#DC143C</color>
+    <color name="firebrick">#B22222</color>
+    <color name="maroon">#800000</color>
+    <color name="salmon">#FA8072</color>
+    <color name="light_salmon">#FFA07A</color>
+    <color name="rosy_brown">#BC8F8F</color>
+
+    <!-- Pink Shades -->
+    <color name="pink">#FFC0CB</color>
+    <color name="hot_pink">#FF69B4</color>
+    <color name="deep_pink">#FF1493</color>
+    <color name="pale_violet_red">#DB7093</color>
+
+    <!-- Orange Shades -->
+    <color name="orange">#FFA500</color>
+    <color name="dark_orange">#FF8C00</color>
+    <color name="light_orange">#FFDAB9</color>
+    <color name="peach">#FFE5B4</color>
+    <color name="coral">#FF7F50</color>
+    <color name="tomato">#FF6347</color>
+
+    <!-- Yellow Shades -->
+    <color name="yellow">#FFFF00</color>
+    <color name="gold">#FFD700</color>
+    <color name="light_yellow">#FFFFE0</color>
+    <color name="khaki">#F0E68C</color>
+    <color name="mustard">#FFDB58</color>
+
+    <!-- Green Shades -->
+    <color name="green">#008000</color>
+    <color name="dark_green">#006400</color>
+    <color name="light_green">#90EE90</color>
+    <color name="forest_green">#228B22</color>
+    <color name="lime_green">#32CD32</color>
+    <color name="spring_green">#00FF7F</color>
+    <color name="sea_green">#2E8B57</color>
+    <color name="olive">#808000</color>
+    <color name="dark_olive_green">#556B2F</color>
+    <color name="chartreuse">#7FFF00</color>
+    <color name="pale_green">#98FB98</color>
+    <color name="honeydew">#F0FFF0</color>
+
+    <!-- Cyan/Aqua Shades -->
+    <color name="cyan">#00FFFF</color>
+    <color name="dark_cyan">#008B8B</color>
+    <color name="light_cyan">#E0FFFF</color>
+    <color name="teal">#008080</color>
+    <color name="turquoise">#40E0D0</color>
+    <color name="medium_turquoise">#48D1CC</color>
+    <color name="light_sea_green">#20B2AA</color>
+
+    <!-- Blue Shades -->
+    <color name="blue">#0000FF</color>
+    <color name="dark_blue">#00008B</color>
+    <color name="light_blue">#ADD8E6</color>
+    <color name="steel_blue">#4682B4</color>
+    <color name="royal_blue">#4169E1</color>
+    <color name="sky_blue">#87CEEB</color>
+    <color name="deep_sky_blue">#00BFFF</color>
+    <color name="dodger_blue">#1E90FF</color>
+    <color name="cornflower_blue">#6495ED</color>
+    <color name="navy_blue">#000080</color>
+    <color name="midnight_blue">#191970</color>
+    <color name="alice_blue">#F0F8FF</color>
+
+    <!-- Purple/Violet Shades -->
+    <color name="purple">#800080</color>
+    <color name="dark_purple">#4B0082</color>
+    <color name="light_purple">#D8BFD8</color>
+    <color name="violet">#EE82EE</color>
+    <color name="orchid">#DA70D6</color>
+    <color name="thistle">#D8BFD8</color>
+    <color name="plum">#DDA0DD</color>
+    <color name="magenta">#FF00FF</color>
+    <color name="indigo">#4B0082</color>
+
+    <!-- Brown Shades -->
+    <color name="brown">#A52A2A</color>
+    <color name="dark_brown">#654321</color>
+    <color name="light_brown">#D2B48C</color>
+    <color name="sienna">#A0522D</color>
+    <color name="peru">#CD853F</color>
+    <color name="saddle_brown">#8B4513</color>
+    <color name="burly_wood">#DEB887</color>
+    <color name="tan">#D2B48C</color>
+    <color name="beige">#F5F5DC</color>
+
+    <!-- Other Shades -->
+    <color name="wheat">#F5DEB3</color>
+    <color name="moccasin">#FFE4B5</color>
+    <color name="bisque">#FFE4C4</color>
+    <color name="antique_white">#FAEBD7</color>
+    <color name="snow">#FFFAFA</color>
+    <color name="floral_white">#FFFAF0</color>
+    <color name="old_lace">#FDF5E6</color>
+    <color name="ivory">#FFFFF0</color>
+    <color name="ghost_white">#F8F8FF</color>
+    <color name="seashell">#FFF5EE</color>
+    <color name="mint_cream">#F5FFFA</color>
+    <color name="lavender">#E6E6FA</color>
+    <color name="misty_rose">#FFE4E1</color>
+    <color name="peach_puff">#FFDAB9</color>
+    <color name="azure">#F0FFFF</color>
+</resources>
