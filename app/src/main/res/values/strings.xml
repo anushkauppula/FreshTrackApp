@@ -2,4 +2,20 @@
     <string name="app_name">FreshTrack</string>
     <string name="title">Food Expiration Tracker</string>
     <string name="add">Add Food Item</string>
+    <string name="email">Enter Your Email</string>
+    <string name="logo">Logo</string>
+    <string name="password">Enter Your Password</string>
+    <string name="login">Login</string>
+    <string name="forgot">Forgot Password</string>
+    <string name="text">Don\'t have an account? Sign Up</string>
+    <string name="signin">Sign in with Google</string>
+    <string name="signup">Sign Up with Google</string>
+    <string name="user">New User</string>
+    <string name="Nice">Nice To See You Here</string>
+    <string name="sign">Sign Up</string>
+    <string name="want">Want To Login?</string>
+    <string name="here">Don\'t Worry We Are Here</string>
+    <string name="register">Enter your registered mail</string>
+    <string name="recover">Click Here To Recover</string>
+    <string name="back">Go Back To Login Screen</string>
 </resources>

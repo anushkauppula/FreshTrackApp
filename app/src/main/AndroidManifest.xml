@@ -13,6 +13,12 @@
         android:theme="@style/Theme.FreshTrack"
         tools:targetApi="31">
         <activity
+            android:name=".MainActivityForgotPassword"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivitySignup"
+            android:exported="false" />
+        <activity
             android:name=".MainActivityAuthentication"
             android:exported="false" />
         <activity
