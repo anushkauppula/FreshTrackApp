@@ -9,13 +9,13 @@
 
     <!-- Centered title section -->
     <RelativeLayout
+        android:id="@+id/centerline2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/centerline2"
         android:layout_centerInParent="true">
     </RelativeLayout>
 
-    <!-- User information text section -->
+    <!-- User information section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,7 +25,6 @@
         android:layout_marginBottom="150dp"
         android:orientation="vertical">
 
-        <!-- Title text -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -34,7 +33,6 @@
             android:fontFamily="@font/arvobolditalic"
             android:textColor="@color/burly_wood" />
 
-        <!-- Subtitle text -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,40 +40,41 @@
             android:textColor="@color/burly_wood" />
     </LinearLayout>
 
-    <!-- Email input field -->
+    <!-- Email input -->
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/centerline2"
         android:layout_marginBottom="10dp"
-        android:id="@+id/email"
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp">
 
         <EditText
+            android:id="@+id/signupemail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/signupemail"
             android:hint="@string/email"
             android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Password input field -->
+    <!-- Password input -->
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/email"
         android:layout_marginTop="10dp"
-        android:id="@+id/password"
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp"
         app:passwordToggleEnabled="true">
 
         <EditText
+            android:id="@+id/signuppassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/signuppassword"
-            android:hint="@string/password" />
+            android:hint="@string/password"
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Sign-Up Button -->
@@ -90,16 +89,16 @@
         android:text="@string/sign"
         android:textColor="@color/white" />
 
-    <!-- Login Text -->
+    <!-- Login Redirect Text -->
     <TextView
+        android:id="@+id/gotologin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/signup"
+        android:layout_marginTop="70dp"
         android:textAlignment="center"
         android:text="@string/want"
         android:textColor="@color/teal"
         android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_below="@id/signup"
-        android:id="@+id/gotologin"
-        android:layout_marginTop="70dp" />
+        android:layout_marginRight="20dp" />
 </RelativeLayout>
