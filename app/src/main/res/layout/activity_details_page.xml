@@ -4,33 +4,39 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnScanBarcode"
+    <TextView
+        android:id="@+id/tvFoodName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Barcode"/>
+        android:text="Food Name"
+        android:textSize="24sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvExpiryDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Expiry Date: -"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status: Fresh"
+        android:textSize="18sp"/>
 
     <Button
-        android:id="@+id/btnScanCamera"
+        android:id="@+id/btnEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Use Camera"/>
-
-    <EditText
-        android:id="@+id/etFoodName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter Food Name"/>
-
-    <EditText
-        android:id="@+id/etExpiryDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter Expiry Date"/>
+        android:text="Edit"/>
 
     <Button
-        android:id="@+id/btnSaveItem"
+        android:id="@+id/btnDelete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Save Item"/>
+        android:text="Delete"
+        android:textColor="#FFFFFF"
+        android:background="@color/red"/>
 </LinearLayout>
