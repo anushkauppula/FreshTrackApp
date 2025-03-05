@@ -4,6 +4,24 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <EditText
+        android:id="@+id/etFoodName"
+        android:layout_width="384dp"
+        android:layout_height="wrap_content"
+        android:hint="Enter Food Name" />
+
+    <EditText
+        android:id="@+id/etExpiryDate"
+        android:layout_width="386dp"
+        android:layout_height="55dp"
+        android:hint="Enter Expiry Date" />
+
+    <Button
+        android:id="@+id/btnSaveItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Item"/>
+
     <Button
         android:id="@+id/btnScanBarcode"
         android:layout_width="match_parent"
@@ -14,23 +32,6 @@
         android:id="@+id/btnScanCamera"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Use Camera"/>
+        android:text="Use Camera" />
 
-    <EditText
-        android:id="@+id/etFoodName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter Food Name"/>
-
-    <EditText
-        android:id="@+id/etExpiryDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter Expiry Date"/>
-
-    <Button
-        android:id="@+id/btnSaveItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Item"/>
 </LinearLayout>
