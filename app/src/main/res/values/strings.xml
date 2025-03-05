@@ -15,7 +15,7 @@
     <string name="sign">Sign Up</string>
     <string name="want">Want To Login?</string>
     <string name="here">Don\'t Worry We Are Here</string>
-    <string name="register">Enter your registered mail</string>
+    <string name="register">Enter your registered email</string>
     <string name="recover">Click Here To Recover</string>
     <string name="back">Go Back To Login Screen</string>
 </resources>

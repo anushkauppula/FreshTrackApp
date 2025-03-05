@@ -16,7 +16,7 @@
         android:id="@+id/tvExpiryDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Expiry Date: -"
+        android:text="Expiry Date: "
         android:textSize="18sp"/>
 
     <TextView
