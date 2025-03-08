@@ -26,6 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import android.content.Intent;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
+import android.view.View;
 
 public class MainActivityHome extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -74,6 +80,73 @@ public class MainActivityHome extends AppCompatActivity implements NavigationVie
 
         // Load food items
         loadFoodItems();
+
+        // Add swipe to delete functionality
+        ItemTouchHelper.SimpleCallback swipeToDeleteCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            private final ColorDrawable background = new ColorDrawable(getResources().getColor(R.color.crimson, null));
+            private final Paint textPaint = new Paint();
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, 
+                                  @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, 
+                                  int actionState, boolean isCurrentlyActive) {
+                
+                View itemView = viewHolder.itemView;
+                if (dX == 0 && !isCurrentlyActive) {
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                    return;
+                }
+
+                // Set background
+                background.setBounds(itemView.getLeft(), itemView.getTop(), 
+                                  itemView.getRight(), itemView.getBottom());
+                background.draw(c);
+
+                // Setup text paint
+                textPaint.setColor(Color.WHITE);
+                textPaint.setTextSize(36);
+                
+                // Draw "Delete" text based on swipe direction
+                String deleteText = "Delete";
+                float textY = itemView.getTop() + (itemView.getHeight() / 2f) + 24;
+                
+                if (dX > 0) { // Swiping right
+                    textPaint.setTextAlign(Paint.Align.LEFT);
+                    float textX = itemView.getLeft() + 50;
+                    c.drawText(deleteText, textX, textY, textPaint);
+                } else if (dX < 0) { // Swiping left
+                    textPaint.setTextAlign(Paint.Align.RIGHT);
+                    float textX = itemView.getRight() - 50;
+                    c.drawText(deleteText, textX, textY, textPaint);
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                FoodItem foodItem = foodItems.get(position);
+                
+                // Delete from Firebase
+                firebaseModel.deleteFoodItem(foodItem.getId())
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(MainActivityHome.this, "Item deleted", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(MainActivityHome.this, "Error deleting item: " + e.getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                        adapter.notifyItemChanged(position);
+                    });
+            }
+        };
+
+        new ItemTouchHelper(swipeToDeleteCallback).attachToRecyclerView(recyclerView);
     }
 
     private void loadFoodItems() {
