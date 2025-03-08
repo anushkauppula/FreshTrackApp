@@ -74,7 +74,7 @@ public class FoodItem {
     public int getStatusColor() {
         switch (calculateStatus()) {
             case STATUS_EXPIRED:
-                return Color.RED;
+                return Color.RED; // Use same red as delete background
             case STATUS_EXPIRING_SOON:
                 return Color.parseColor("#FFA500"); // Orange
             case STATUS_FRESH:
