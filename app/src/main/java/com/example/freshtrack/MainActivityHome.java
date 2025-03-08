@@ -25,15 +25,17 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.Intent;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivityHome extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout drawerLayout;
     private FirebaseModel firebaseModel;
-    private FirebaseAuth mAuth;
+    // private FirebaseAuth mAuth;  // Comment out but keep for later
     private RecyclerView recyclerView;
     private FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
+    private FloatingActionButton fabAddFood;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +54,16 @@ public class MainActivityHome extends AppCompatActivity implements NavigationVie
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        // Initialize FAB and set click listener
+        fabAddFood = findViewById(R.id.fabAddFood);
+        fabAddFood.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivityHome.this, AddListActivity.class);
+            startActivity(intent);
+        });
+
         // Initialize Firebase
         firebaseModel = new FirebaseModel();
-        mAuth = FirebaseAuth.getInstance();
+        // mAuth = FirebaseAuth.getInstance();  // Comment out but keep for later
 
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
@@ -63,22 +72,22 @@ public class MainActivityHome extends AppCompatActivity implements NavigationVie
         adapter = new FoodItemAdapter(foodItems);
         recyclerView.setAdapter(adapter);
 
-        // Setup FAB click listener
-        findViewById(R.id.fabAddFood).setOnClickListener(v -> {
-            startActivity(new Intent(MainActivityHome.this, AddListActivity.class));
-        });
-
         // Load food items
         loadFoodItems();
     }
 
     private void loadFoodItems() {
+        /* Comment out authentication check for now
         if (mAuth.getCurrentUser() == null) {
             // Handle not logged in case
             return;
         }
-
         String userId = mAuth.getCurrentUser().getUid();
+        */
+
+        // Temporarily use a fixed userId
+        String userId = "testUser123";
+        
         firebaseModel.getFoodItemsByUser(userId)
             .addValueEventListener(new ValueEventListener() {
                 @Override
@@ -87,7 +96,7 @@ public class MainActivityHome extends AppCompatActivity implements NavigationVie
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         FoodItem item = snapshot.getValue(FoodItem.class);
                         if (item != null) {
-                            item.calculateStatus(); // Calculate status before adding
+                            item.calculateStatus();
                             foodItems.add(item);
                         }
                     }
