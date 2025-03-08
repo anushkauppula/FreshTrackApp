@@ -1,5 +1,6 @@
 package com.example.freshtrack.models;
 
+import android.graphics.Color;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,7 +17,6 @@ public class FoodItem {
     private String expiryDate;
     private String userId;
     private long timestamp;
-    private int status;
 
     // Empty constructor required for Firebase
     public FoodItem() {
@@ -27,87 +27,39 @@ public class FoodItem {
         this.expiryDate = expiryDate;
         this.userId = userId;
         this.timestamp = System.currentTimeMillis();
-        calculateStatus();
     }
 
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getFoodName() {
-        return foodName;
-    }
-
-    public void setFoodName(String foodName) {
-        this.foodName = foodName;
-    }
-
-    public String getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(String expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public void calculateStatus() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    // Calculate status based on expiry date
+    public int calculateStatus() {
         try {
-            Date expiry = sdf.parse(expiryDate);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+            Date expDate = sdf.parse(expiryDate);
             Date today = new Date();
             
-            // If the date is already passed
-            if (expiry.before(today)) {
-                this.status = STATUS_EXPIRED;
-                return;
-            }
-
-            // Calculate days until expiry
-            long diffInMillies = expiry.getTime() - today.getTime();
-            long daysUntilExpiry = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-
-            // If expiring within 3 days
-            if (daysUntilExpiry <= 3) {
-                this.status = STATUS_EXPIRING_SOON;
+            // Reset hours, minutes, seconds and millis for accurate day comparison
+            today.setHours(0);
+            today.setMinutes(0);
+            today.setSeconds(0);
+            
+            // Calculate days difference
+            long diffInMillies = expDate.getTime() - today.getTime();
+            long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+            
+            if (diffInDays < 0) {
+                return STATUS_EXPIRED;
+            } else if (diffInDays <= 1) { // Today or tomorrow
+                return STATUS_EXPIRING_SOON;
             } else {
-                this.status = STATUS_FRESH;
+                return STATUS_FRESH;
             }
         } catch (ParseException e) {
-            this.status = STATUS_FRESH; // Default status if date parsing fails
+            e.printStackTrace();
+            return STATUS_FRESH; // Default to fresh if there's an error
         }
     }
 
     public String getStatusText() {
-        switch (status) {
+        switch (calculateStatus()) {
             case STATUS_EXPIRED:
                 return "Expired";
             case STATUS_EXPIRING_SOON:
@@ -120,15 +72,27 @@ public class FoodItem {
     }
 
     public int getStatusColor() {
-        switch (status) {
+        switch (calculateStatus()) {
             case STATUS_EXPIRED:
-                return android.graphics.Color.RED;
+                return Color.RED;
             case STATUS_EXPIRING_SOON:
-                return android.graphics.Color.parseColor("#FFA500"); // Orange
+                return Color.parseColor("#FFA500"); // Orange
             case STATUS_FRESH:
-                return android.graphics.Color.GREEN;
+                return Color.GREEN;
             default:
-                return android.graphics.Color.GRAY;
+                return Color.GRAY;
         }
     }
+
+    // Getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getFoodName() { return foodName; }
+    public void setFoodName(String foodName) { this.foodName = foodName; }
+    public String getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 } 
