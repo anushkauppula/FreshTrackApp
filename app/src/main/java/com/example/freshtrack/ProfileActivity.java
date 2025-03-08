@@ -1,46 +1,26 @@
 package com.example.freshtrack;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.widget.ImageButton;
 import android.widget.Toast;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.bumptech.glide.Glide;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
-    private static final int PERMISSION_REQUEST_CODE = 123;
-    private ShapeableImageView profileImage;
-    private ImageButton btnEditPhoto;
+    // private static final int PERMISSION_REQUEST_CODE = 123;
+    // private ShapeableImageView profileImage;
+    // private ImageButton btnEditPhoto;
     private TextInputEditText etFirstName, etLastName, etEmail, etMobile;
     private MaterialButton btnSaveProfile;
     private FirebaseModel firebaseModel;
-    private Uri selectedImageUri;
-    private ActivityResultLauncher<Intent> imagePickerLauncher;
-    private ActivityResultLauncher<Intent> cameraLauncher;
-    private Uri cameraImageUri;
+    // private Uri selectedImageUri;
+    // private ActivityResultLauncher<Intent> imagePickerLauncher;
+    // private ActivityResultLauncher<Intent> cameraLauncher;
+    // private Uri cameraImageUri;
     private String userId = "testUser123"; // Temporarily hardcoded, replace with actual user ID later
-    private String currentProfileImageUrl;
+    // private String currentProfileImageUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,15 +28,15 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         initializeViews();
-        setupImagePicker();
-        setupCameraLauncher();
+        // setupImagePicker();
+        // setupCameraLauncher();
         loadUserProfile();
         setupClickListeners();
     }
 
     private void initializeViews() {
-        profileImage = findViewById(R.id.profileImage);
-        btnEditPhoto = findViewById(R.id.btnEditPhoto);
+        // profileImage = findViewById(R.id.profileImage);
+        // btnEditPhoto = findViewById(R.id.btnEditPhoto);
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
@@ -65,6 +45,73 @@ public class ProfileActivity extends AppCompatActivity {
         firebaseModel = new FirebaseModel();
     }
 
+    private void setupClickListeners() {
+        // btnEditPhoto.setOnClickListener(v -> showImageSourceDialog());
+        btnSaveProfile.setOnClickListener(v -> saveProfile());
+    }
+
+    private void loadUserProfile() {
+        firebaseModel.getUserProfile(userId).addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                etFirstName.setText(documentSnapshot.getString("firstName"));
+                etLastName.setText(documentSnapshot.getString("lastName"));
+                etEmail.setText(documentSnapshot.getString("email"));
+                etMobile.setText(documentSnapshot.getString("mobile"));
+
+                // currentProfileImageUrl = documentSnapshot.getString("profileImage");
+                // if (currentProfileImageUrl != null && !currentProfileImageUrl.isEmpty()) {
+                //     Glide.with(this)
+                //         .load(currentProfileImageUrl)
+                //         .centerCrop()
+                //         .into(profileImage);
+                // } else {
+                //     profileImage.setImageResource(R.drawable.profile);
+                // }
+            }
+        }).addOnFailureListener(e ->
+            Toast.makeText(this, "Error loading profile: " + e.getMessage(),
+                Toast.LENGTH_SHORT).show());
+    }
+
+    private void saveProfile() {
+        String firstName = etFirstName.getText().toString().trim();
+        String lastName = etLastName.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String mobile = etMobile.getText().toString().trim();
+
+        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || mobile.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show loading state
+        btnSaveProfile.setEnabled(false);
+        btnSaveProfile.setText("Saving...");
+
+        Map<String, Object> profileData = new HashMap<>();
+        profileData.put("firstName", firstName);
+        profileData.put("lastName", lastName);
+        profileData.put("email", email);
+        profileData.put("mobile", mobile);
+
+        saveProfileData(profileData);
+    }
+
+    private void saveProfileData(Map<String, Object> profileData) {
+        firebaseModel.updateUserProfile(userId, profileData)
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                finish();
+            })
+            .addOnFailureListener(e -> {
+                btnSaveProfile.setEnabled(true);
+                btnSaveProfile.setText("Save Changes");
+                Toast.makeText(this, "Error updating profile: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+            });
+    }
+
+    /* Commented out photo-related methods
     private void setupImagePicker() {
         imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -98,11 +145,6 @@ public class ProfileActivity extends AppCompatActivity {
             .load(imageUri)
             .centerCrop()
             .into(profileImage);
-    }
-
-    private void setupClickListeners() {
-        btnEditPhoto.setOnClickListener(v -> showImageSourceDialog());
-        btnSaveProfile.setOnClickListener(v -> saveProfile());
     }
 
     private void showImageSourceDialog() {
@@ -209,73 +251,6 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void loadUserProfile() {
-        firebaseModel.getUserProfile(userId).addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                etFirstName.setText(documentSnapshot.getString("firstName"));
-                etLastName.setText(documentSnapshot.getString("lastName"));
-                etEmail.setText(documentSnapshot.getString("email"));
-                etMobile.setText(documentSnapshot.getString("mobile"));
-
-                currentProfileImageUrl = documentSnapshot.getString("profileImage");
-                if (currentProfileImageUrl != null && !currentProfileImageUrl.isEmpty()) {
-                    Glide.with(this)
-                        .load(currentProfileImageUrl)
-                        .centerCrop()
-                        .into(profileImage);
-                } else {
-                    profileImage.setImageResource(R.drawable.profile);
-                }
-            }
-        }).addOnFailureListener(e ->
-            Toast.makeText(this, "Error loading profile: " + e.getMessage(),
-                Toast.LENGTH_SHORT).show());
-    }
-
-    private void saveProfile() {
-        String firstName = etFirstName.getText().toString().trim();
-        String lastName = etLastName.getText().toString().trim();
-        String email = etEmail.getText().toString().trim();
-        String mobile = etMobile.getText().toString().trim();
-
-        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || mobile.isEmpty()) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Show loading state
-        btnSaveProfile.setEnabled(false);
-        btnSaveProfile.setText("Saving...");
-
-        Map<String, Object> profileData = new HashMap<>();
-        profileData.put("firstName", firstName);
-        profileData.put("lastName", lastName);
-        profileData.put("email", email);
-        profileData.put("mobile", mobile);
-
-        // If there's a new image selected
-        if (selectedImageUri != null) {
-            // If there's an existing profile photo, delete it first
-            if (currentProfileImageUrl != null && !currentProfileImageUrl.isEmpty()) {
-                FirebaseStorage.getInstance().getReferenceFromUrl(currentProfileImageUrl)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> uploadNewImageAndSaveProfile(profileData))
-                    .addOnFailureListener(e -> {
-                        // If deletion fails, still try to upload new image
-                        uploadNewImageAndSaveProfile(profileData);
-                    });
-            } else {
-                uploadNewImageAndSaveProfile(profileData);
-            }
-        } else {
-            // If no new image is selected, keep the existing image URL
-            if (currentProfileImageUrl != null && !currentProfileImageUrl.isEmpty()) {
-                profileData.put("profileImage", currentProfileImageUrl);
-            }
-            saveProfileData(profileData);
-        }
-    }
-
     private void uploadNewImageAndSaveProfile(Map<String, Object> profileData) {
         StorageReference storageRef = FirebaseStorage.getInstance().getReference()
             .child("profile_images")
@@ -293,20 +268,6 @@ public class ProfileActivity extends AppCompatActivity {
                 btnSaveProfile.setEnabled(true);
                 btnSaveProfile.setText("Save Changes");
                 Toast.makeText(this, "Failed to upload image: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
-            });
-    }
-
-    private void saveProfileData(Map<String, Object> profileData) {
-        firebaseModel.updateUserProfile(userId, profileData)
-            .addOnSuccessListener(aVoid -> {
-                Toast.makeText(this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                finish();
-            })
-            .addOnFailureListener(e -> {
-                btnSaveProfile.setEnabled(true);
-                btnSaveProfile.setText("Save Changes");
-                Toast.makeText(this, "Error updating profile: " + e.getMessage(),
                     Toast.LENGTH_SHORT).show();
             });
     }
@@ -361,4 +322,5 @@ public class ProfileActivity extends AppCompatActivity {
             btnSaveProfile.setText("Save Changes");
         }
     }
+    */
 } 
