@@ -27,15 +27,15 @@
         <activity
             android:name=".MainActivityAuthentication"
             android:exported="false" />
-        <activity
-            android:name=".MainActivitySettings"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivityNotifications"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity_AddItem"
-            android:exported="false" />
+<!--        <activity-->
+<!--            android:name=".MainActivitySettings"-->
+<!--            android:exported="false" />-->
+<!--        <activity-->
+<!--            android:name=".MainActivityNotifications"-->
+<!--            android:exported="false" />-->
+<!--        <activity-->
+<!--            android:name=".MainActivity_AddItem"-->
+<!--            android:exported="false" />-->
         <activity
             android:name=".MainActivityHome"
             android:exported="true">
