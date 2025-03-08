@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,9 +13,15 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import java.util.Calendar;
 
+import com.example.freshtrack.models.FoodItem;
+import com.google.firebase.auth.FirebaseAuth;
+
 public class AddListActivity extends AppCompatActivity {
 
+    private EditText etFoodName;
     private EditText etExpiryDate;
+    private FirebaseModel firebaseModel;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +34,19 @@ public class AddListActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Initialize Firebase
+        firebaseModel = new FirebaseModel();
+        mAuth = FirebaseAuth.getInstance();
+
+        // Initialize views
+        etFoodName = findViewById(R.id.etFoodName);
         etExpiryDate = findViewById(R.id.etExpiryDate);
 
+        // Setup date picker
         etExpiryDate.setOnClickListener(v -> showDatePicker());
+
+        // Setup save button
+        findViewById(R.id.btnSave).setOnClickListener(v -> saveItem());
     }
 
     private void showDatePicker() {
@@ -48,5 +65,35 @@ public class AddListActivity extends AppCompatActivity {
                 }, year, month, day);
 
         datePickerDialog.show();
+    }
+
+    private void saveItem() {
+        String foodName = etFoodName.getText().toString().trim();
+        String expiryDate = etExpiryDate.getText().toString().trim();
+
+        if (foodName.isEmpty()) {
+            etFoodName.setError("Please enter food name");
+            return;
+        }
+
+        if (expiryDate.isEmpty()) {
+            etExpiryDate.setError("Please select expiry date");
+            return;
+        }
+
+        if (mAuth.getCurrentUser() != null) {
+            String userId = mAuth.getCurrentUser().getUid();
+            FoodItem foodItem = new FoodItem(foodName, expiryDate, userId);
+            
+            firebaseModel.addFoodItem(foodItem)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Error saving food item: " + e.getMessage(), 
+                        Toast.LENGTH_SHORT).show();
+                });
+        }
     }
 }

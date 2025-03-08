@@ -1,27 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:id="@+id/main">
+    android:padding="16dp">
 
     <EditText
         android:id="@+id/etFoodName"
-        android:layout_width="384dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter Food Name" />
+        android:hint="Food Name"
+        android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etExpiryDate"
-        android:layout_width="386dp"
-        android:layout_height="55dp"
-        android:hint="Enter Expiry Date" />
-
-    <Button
-        android:id="@+id/btnSaveItem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Save Item"/>
+        android:hint="Expiry Date"
+        android:focusable="false"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save"/>
 
     <Button
         android:id="@+id/btnScanBarcode"
