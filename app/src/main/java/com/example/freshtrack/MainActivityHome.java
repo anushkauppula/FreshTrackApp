@@ -13,6 +13,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import android.view.MenuItem;
+import android.view.Menu;
 import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -186,15 +187,30 @@ public class MainActivityHome extends AppCompatActivity implements NavigationVie
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.home_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_notifications) {
+            // Handle notification icon click
+            Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();  // Store the ID to compare
+        int itemId = item.getItemId();
         
         if (itemId == R.id.nav_profile) {
-            Toast.makeText(this, "Profile Selected", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, ProfileActivity.class);
+            startActivity(intent);
         } else if (itemId == R.id.nav_settings) {
             Toast.makeText(this, "Settings Selected", Toast.LENGTH_SHORT).show();
-        } else if (itemId == R.id.nav_notifications) {
-            Toast.makeText(this, "Notifications Selected", Toast.LENGTH_SHORT).show();
         }
         
         drawerLayout.closeDrawer(GravityCompat.START);
