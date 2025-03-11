@@ -10,6 +10,8 @@ constraintlayout = "2.2.0"
 firebaseAuth = "23.2.0"
 firebaseFirestore = "25.1.2"
 firebaseStorage = "21.0.1"
+monitor = "1.7.2"
+junitJunit = "4.12"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -22,6 +24,8 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
+junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
