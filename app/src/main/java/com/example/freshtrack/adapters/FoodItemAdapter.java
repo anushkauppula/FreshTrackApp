@@ -14,7 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.freshtrack.R;
 import com.example.freshtrack.FirebaseModel;
 import com.example.freshtrack.models.FoodItem;
+import java.util.Date;
 import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -100,7 +103,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null);
             CheckBox checkBox = dialogView.findViewById(R.id.checkboxDontShowAgain);
             TextView messageText = dialogView.findViewById(R.id.dialogMessage);
-            messageText.setText("Are you sure you want to delete " + item.getFoodName() + "?");
+            messageText.setText("Are you sure you want to delete " + item.getName() + "?");
 
             AlertDialog.Builder builder = new AlertDialog.Builder(context)
                     .setTitle("Delete Item")
@@ -120,8 +123,10 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         }
 
         public void bind(FoodItem item) {
-            tvFoodName.setText(item.getFoodName());
-            tvExpiryDate.setText(item.getExpiryDate());
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+            
+            tvFoodName.setText(item.getName());
+            tvExpiryDate.setText(dateFormat.format(new Date(item.getExpiryDate())));
             tvStatus.setText(item.getStatusText());
             tvStatus.setTextColor(item.getStatusColor());
         }

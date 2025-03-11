@@ -89,7 +89,29 @@ public class AddListActivity extends AppCompatActivity {
         
         // Temporarily use a fixed userId
         String userId = "testUser123";
-        FoodItem foodItem = new FoodItem(foodName, expiryDate, userId);
+        
+        // Parse the expiry date string to timestamp
+        long dateAdded = System.currentTimeMillis();
+        long expiryTimestamp;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+            expiryTimestamp = sdf.parse(expiryDate).getTime();
+        } catch (Exception e) {
+            Log.e("AddListActivity", "Error parsing date", e);
+            Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        FoodItem foodItem = new FoodItem(
+            foodName,              // name
+            dateAdded,            // dateAdded (current timestamp)
+            expiryTimestamp,      // expiryDate
+            userId,               // userId
+            "General",            // category (default)
+            1,                    // quantity (default)
+            "piece",              // unit (default)
+            ""                    // notes (empty by default)
+        );
         
         // Add log before saving
         Log.d("AddListActivity", "Attempting to save food item: " + foodName);
