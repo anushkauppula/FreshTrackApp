@@ -34,6 +34,7 @@ import java.util.List;
 import com.google.android.material.navigation.NavigationView;
 import android.animation.ValueAnimator;
 import android.widget.ImageButton;
+import android.util.Log;
 
 public class DashboardActivity extends AppCompatActivity {
     private TextView userNameText;
@@ -234,6 +235,8 @@ public class DashboardActivity extends AppCompatActivity {
         long currentTime = System.currentTimeMillis();
         long sevenDaysFromNow = currentTime + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
 
+        Log.d("DashboardActivity", "Updating statistics. Total documents: " + total);
+
         for (com.google.firebase.firestore.DocumentSnapshot doc : documents) {
             FoodItem item = doc.toObject(FoodItem.class);
             if (item != null) {
@@ -246,10 +249,24 @@ public class DashboardActivity extends AppCompatActivity {
             }
         }
 
+        Log.d("DashboardActivity", String.format("Counts - Total: %d, Expiring Soon: %d, Expired: %d", 
+            total, expiringSoon, expired));
+
         // Update the TextViews with animations
-        animateTextView(0, total, totalItemsCount);
-        animateTextView(0, expiringSoon, expiringSoonCount);
-        animateTextView(0, expired, expiredCount);
+        if (totalItemsCount != null) {
+            Log.d("DashboardActivity", "Updating totalItemsCount TextView");
+            animateTextView(0, total, totalItemsCount);
+        } else {
+            Log.e("DashboardActivity", "totalItemsCount TextView is null!");
+        }
+        
+        if (expiringSoonCount != null) {
+            animateTextView(0, expiringSoon, expiringSoonCount);
+        }
+        
+        if (expiredCount != null) {
+            animateTextView(0, expired, expiredCount);
+        }
     }
 
     private void animateTextView(int start, int end, TextView textView) {
