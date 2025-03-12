@@ -83,7 +83,7 @@ public class MainActivityAuthentication extends AppCompatActivity {
     }
 
     private void navigateToHome() {
-        Intent intent = new Intent(MainActivityAuthentication.this, MainActivityHome.class);
+        Intent intent = new Intent(MainActivityAuthentication.this, DashboardActivity.class);
         startActivity(intent);
         finish(); // Close login activity
     }
