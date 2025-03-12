@@ -11,9 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.freshtrack.MainActivityHome;
 import com.example.freshtrack.R;
 import com.example.freshtrack.FirebaseModel;
 import com.example.freshtrack.models.FoodItem;
+import com.google.android.material.snackbar.Snackbar;
 import java.util.Date;
 import java.util.List;
 import java.text.SimpleDateFormat;
@@ -108,14 +111,46 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         }
 
         private void deleteItem(FoodItem item) {
-            firebaseModel.deleteFoodItem(item.getId())
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(context, "Failed to delete item: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+            // Store the item temporarily for undo
+            String itemName = item.getName();
+            String itemId = item.getId();
+
+            // Remove the item from the list temporarily
+            foodItemsFiltered.remove(item);
+            notifyDataSetChanged(); // Update the UI immediately
+
+            // Show Snackbar for undo
+            Snackbar snackbar = Snackbar.make(((MainActivityHome) context).findViewById(R.id.bottomNav),
+                    itemName + " deleted", Snackbar.LENGTH_LONG)
+                    .setAction("UNDO", v -> {
+                        // Restore the item
+                        foodItemsFiltered.add(item);
+                        notifyItemInserted(foodItemsFiltered.size() - 1);
+                        firebaseModel.addFoodItem(item); // Re-add to Firebase
                     });
+
+            // Customize Snackbar layout
+            snackbar.setActionTextColor(context.getResources().getColor(android.R.color.holo_blue_light));
+            snackbar.setAnchorView(((MainActivityHome) context).findViewById(R.id.bottomNav)); // Set anchor to bottom nav
+            snackbar.show();
+
+            // Delete the item from Firebase after a delay if not undone
+            snackbar.addCallback(new Snackbar.Callback() {
+                @Override
+                public void onDismissed(Snackbar transientBottomBar, int event) {
+                    if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
+                        // If the Snackbar was dismissed without clicking "UNDO", delete the item
+                        firebaseModel.deleteFoodItem(itemId)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(context, "Item deleted permanently", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(context, "Failed to delete item: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                    }
+                }
+            });
         }
 
         private void showDeleteConfirmationDialog(FoodItem item) {
@@ -144,14 +179,14 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
         public void bind(FoodItem item) {
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
-            
+
             tvFoodName.setText(item.getName());
             tvExpiryDate.setText("Expires: " + dateFormat.format(new Date(item.getExpiryDate())));
-            
+
             // Set status with appropriate background and text color
             TextView tvStatus = this.tvStatus;
             long daysUntilExpiry = (item.getExpiryDate() - System.currentTimeMillis()) / (24 * 60 * 60 * 1000);
-            
+
             if (daysUntilExpiry < 0) {
                 tvStatus.setText("Expired");
                 tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));
