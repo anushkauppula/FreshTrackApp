@@ -18,16 +18,35 @@ import java.util.Date;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.ArrayList;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
+    private List<FoodItem> foodItemsFiltered; // For filtered results
     private FirebaseModel firebaseModel;
     private static final String PREFS_NAME = "DeleteDialogPrefs";
     private static final String KEY_DONT_SHOW_AGAIN = "dontShowDeleteDialog";
 
     public FoodItemAdapter(List<FoodItem> foodItems) {
         this.foodItems = foodItems;
+        this.foodItemsFiltered = new ArrayList<>(foodItems);
         this.firebaseModel = new FirebaseModel();
+    }
+
+    // Add this method for filtering
+    public void filter(String query) {
+        foodItemsFiltered.clear();
+        if (query.isEmpty()) {
+            foodItemsFiltered.addAll(foodItems);
+        } else {
+            String searchQuery = query.toLowerCase();
+            for (FoodItem item : foodItems) {
+                if (item.getName().toLowerCase().contains(searchQuery)) {
+                    foodItemsFiltered.add(item);
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -40,17 +59,18 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
     @Override
     public void onBindViewHolder(@NonNull FoodItemViewHolder holder, int position) {
-        FoodItem item = foodItems.get(position);
+        FoodItem item = foodItemsFiltered.get(position); // Use filtered list
         holder.bind(item);
     }
 
     @Override
     public int getItemCount() {
-        return foodItems.size();
+        return foodItemsFiltered.size(); // Use filtered list size
     }
 
     public void updateItems(List<FoodItem> newItems) {
         this.foodItems = newItems;
+        this.foodItemsFiltered = new ArrayList<>(newItems);
         notifyDataSetChanged();
     }
 
