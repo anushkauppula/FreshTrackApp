@@ -33,6 +33,7 @@ import java.util.List;
 
 import com.google.android.material.navigation.NavigationView;
 import android.animation.ValueAnimator;
+import android.widget.ImageButton;
 
 public class DashboardActivity extends AppCompatActivity {
     private TextView userNameText;
@@ -54,6 +55,20 @@ public class DashboardActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
+
+        // Initialize Firebase
+        firebaseAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
+
+        // Check if user is authenticated
+        if (currentUser == null) {
+            // User is not logged in, redirect to authentication
+            Intent intent = new Intent(DashboardActivity.this, MainActivityAuthentication.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         // Set up toolbar
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
@@ -87,11 +102,6 @@ public class DashboardActivity extends AppCompatActivity {
         drawerToggle.syncState();
 
         setupNavigationView();
-
-        // Initialize Firebase
-        firebaseAuth = FirebaseAuth.getInstance();
-        firestore = FirebaseFirestore.getInstance();
-        currentUser = firebaseAuth.getCurrentUser();
 
         // Initialize views
         initializeViews();
@@ -256,6 +266,21 @@ public class DashboardActivity extends AppCompatActivity {
         // Set up header click listener
         View headerView = navigationView.getHeaderView(0);
         TextView titleView = headerView.findViewById(R.id.nav_header_title);
+        ImageButton signOutButton = headerView.findViewById(R.id.btnSignOut);
+
+        // Set up sign out button click listener
+        signOutButton.setOnClickListener(v -> {
+            // Sign out from Firebase
+            firebaseAuth.signOut();
+            
+            // Navigate to login screen
+            Intent intent = new Intent(DashboardActivity.this, MainActivityAuthentication.class);
+            // Clear the back stack so user can't go back after signing out
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
         titleView.setOnClickListener(v -> {
             // Refresh current activity
             Intent intent = new Intent(this, DashboardActivity.class);
