@@ -22,6 +22,8 @@ import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -73,7 +75,16 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
     public void updateItems(List<FoodItem> newItems) {
         this.foodItems = newItems;
-        this.foodItemsFiltered = new ArrayList<>(newItems);
+
+        // Sort the items by dateAdded in descending order
+        Collections.sort(this.foodItems, new Comparator<FoodItem>() {
+            @Override
+            public int compare(FoodItem item1, FoodItem item2) {
+                return Long.compare(item2.getDateAdded(), item1.getDateAdded()); // Most recent first
+            }
+        });
+
+        this.foodItemsFiltered = new ArrayList<>(this.foodItems);
         notifyDataSetChanged();
     }
 
@@ -182,11 +193,20 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
             tvFoodName.setText(item.getName());
             tvExpiryDate.setText("Expires: " + dateFormat.format(new Date(item.getExpiryDate())));
+            
+            // Set category, weight, and count
+            TextView tvCategory = itemView.findViewById(R.id.tvCategory);
+            TextView tvWeight = itemView.findViewById(R.id.tvWeight);
+            TextView tvCount = itemView.findViewById(R.id.tvCount);
+
+            tvCategory.setText("Category: " + item.getCategory());
+            tvWeight.setText("Weight: " + (item.getWeight() != null ? item.getWeight() + " lbs" : "N/A"));
+            tvCount.setText("Count: " + (item.getCount() != null ? item.getCount() : "N/A"));
 
             // Set status with appropriate background and text color
             TextView tvStatus = this.tvStatus;
             long daysUntilExpiry = (item.getExpiryDate() - System.currentTimeMillis()) / (24 * 60 * 60 * 1000);
-
+            
             if (daysUntilExpiry < 0) {
                 tvStatus.setText("Expired");
                 tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));

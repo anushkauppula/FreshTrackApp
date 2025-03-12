@@ -21,6 +21,37 @@
         android:focusable="false"
         android:layout_marginBottom="16dp"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Categories"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:layout_marginBottom="8dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerCategory"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/spinner_background"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:spinnerMode="dropdown"/>
+
+    <EditText
+        android:id="@+id/etWeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Weight (lbs, optional)"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/etCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Count (optional)"
+        android:layout_marginBottom="16dp"/>
+
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"

@@ -21,13 +21,16 @@ public class FoodItem {
     private int quantity;
     private String unit;
     private String notes;
+    private String weight;
+    private String count;
 
     // Empty constructor required for Firestore
     public FoodItem() {
     }
 
     public FoodItem(String name, long dateAdded, long expiryDate, String userId, 
-                   String category, int quantity, String unit, String notes) {
+                   String category, int quantity, String unit, String notes, 
+                   String weight, String count) {
         this.name = name;
         this.dateAdded = dateAdded;
         this.expiryDate = expiryDate;
@@ -36,6 +39,8 @@ public class FoodItem {
         this.quantity = quantity;
         this.unit = unit;
         this.notes = notes;
+        this.weight = weight;
+        this.count = count;
     }
 
     // Calculate status based on expiry date
@@ -150,5 +155,21 @@ public class FoodItem {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getWeight() {
+        return weight;
+    }
+
+    public void setWeight(String weight) {
+        this.weight = weight;
+    }
+
+    public String getCount() {
+        return count;
+    }
+
+    public void setCount(String count) {
+        this.count = count;
     }
 } 

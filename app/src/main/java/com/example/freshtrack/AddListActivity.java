@@ -6,6 +6,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.Calendar;
@@ -18,6 +20,9 @@ public class AddListActivity extends AppCompatActivity {
 
     private EditText etFoodName;
     private EditText etExpiryDate;
+    private Spinner spinnerCategory;
+    private EditText etWeight;
+    private EditText etCount;
     private Button btnSave;
     private FirebaseModel firebaseModel;
     // private FirebaseAuth mAuth;  // Comment out but keep for later
@@ -34,13 +39,29 @@ public class AddListActivity extends AppCompatActivity {
         // Initialize views
         etFoodName = findViewById(R.id.etFoodName);
         etExpiryDate = findViewById(R.id.etExpiryDate);
+        spinnerCategory = findViewById(R.id.spinnerCategory);
+        etWeight = findViewById(R.id.etWeight);
+        etCount = findViewById(R.id.etCount);
         btnSave = findViewById(R.id.btnSave);
+
+        // Setup category spinner
+        setupCategorySpinner();
 
         // Setup date picker
         etExpiryDate.setOnClickListener(v -> showDatePicker());
 
         // Setup save button
         btnSave.setOnClickListener(v -> saveItem());
+    }
+
+    private void setupCategorySpinner() {
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.food_categories, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinnerCategory.setAdapter(adapter);
     }
 
     private void showDatePicker() {
@@ -71,6 +92,9 @@ public class AddListActivity extends AppCompatActivity {
     private void saveItem() {
         String foodName = etFoodName.getText().toString().trim();
         String expiryDate = etExpiryDate.getText().toString().trim();
+        String category = spinnerCategory.getSelectedItem().toString();
+        String weight = etWeight.getText().toString().trim();
+        String count = etCount.getText().toString().trim();
 
         if (foodName.isEmpty()) {
             etFoodName.setError("Please enter food name");
@@ -107,10 +131,12 @@ public class AddListActivity extends AppCompatActivity {
             dateAdded,            // dateAdded (current timestamp)
             expiryTimestamp,      // expiryDate
             userId,               // userId
-            "General",            // category (default)
+            category,             // category (from spinner)
             1,                    // quantity (default)
             "piece",              // unit (default)
-            ""                    // notes (empty by default)
+            "",                   // notes (empty by default)
+            weight,               // weight (from input)
+            count                 // count (from input)
         );
         
         // Add log before saving
