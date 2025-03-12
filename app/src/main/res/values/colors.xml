@@ -127,4 +127,7 @@
     <color name="warning_color">#FFA000</color>
     <color name="error_color">#D32F2F</color>
     <color name="success_color">#388E3C</color>
+    <color name="green_700">#388E3C</color>
+    <color name="orange_700">#F57C00</color>
+    <color name="red_700">#D32F2F</color>
 </resources>

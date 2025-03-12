@@ -35,6 +35,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.util.Log;
 import android.widget.TextView;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
 
 public class MainActivityHome extends AppCompatActivity {
 
@@ -47,6 +50,7 @@ public class MainActivityHome extends AppCompatActivity {
     private FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
     private FloatingActionButton fabAddFood;
+    private EditText searchBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +105,21 @@ public class MainActivityHome extends AppCompatActivity {
         foodItems = new ArrayList<>();
         adapter = new FoodItemAdapter(foodItems);
         recyclerView.setAdapter(adapter);
+
+        // Initialize search functionality
+        searchBox = findViewById(R.id.searchBox);
+        searchBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         // Load food items
         loadFoodItems();

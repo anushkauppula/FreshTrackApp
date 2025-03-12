@@ -18,16 +18,35 @@ import java.util.Date;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.ArrayList;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
+    private List<FoodItem> foodItemsFiltered; // For filtered results
     private FirebaseModel firebaseModel;
     private static final String PREFS_NAME = "DeleteDialogPrefs";
     private static final String KEY_DONT_SHOW_AGAIN = "dontShowDeleteDialog";
 
     public FoodItemAdapter(List<FoodItem> foodItems) {
         this.foodItems = foodItems;
+        this.foodItemsFiltered = new ArrayList<>(foodItems);
         this.firebaseModel = new FirebaseModel();
+    }
+
+    // Add this method for filtering
+    public void filter(String query) {
+        foodItemsFiltered.clear();
+        if (query.isEmpty()) {
+            foodItemsFiltered.addAll(foodItems);
+        } else {
+            String searchQuery = query.toLowerCase();
+            for (FoodItem item : foodItems) {
+                if (item.getName().toLowerCase().contains(searchQuery)) {
+                    foodItemsFiltered.add(item);
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -40,17 +59,18 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
     @Override
     public void onBindViewHolder(@NonNull FoodItemViewHolder holder, int position) {
-        FoodItem item = foodItems.get(position);
+        FoodItem item = foodItemsFiltered.get(position); // Use filtered list
         holder.bind(item);
     }
 
     @Override
     public int getItemCount() {
-        return foodItems.size();
+        return foodItemsFiltered.size(); // Use filtered list size
     }
 
     public void updateItems(List<FoodItem> newItems) {
         this.foodItems = newItems;
+        this.foodItemsFiltered = new ArrayList<>(newItems);
         notifyDataSetChanged();
     }
 
@@ -126,9 +146,25 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
             
             tvFoodName.setText(item.getName());
-            tvExpiryDate.setText(dateFormat.format(new Date(item.getExpiryDate())));
-            tvStatus.setText(item.getStatusText());
-            tvStatus.setTextColor(item.getStatusColor());
+            tvExpiryDate.setText("Expires: " + dateFormat.format(new Date(item.getExpiryDate())));
+            
+            // Set status with appropriate background and text color
+            TextView tvStatus = this.tvStatus;
+            long daysUntilExpiry = (item.getExpiryDate() - System.currentTimeMillis()) / (24 * 60 * 60 * 1000);
+            
+            if (daysUntilExpiry < 0) {
+                tvStatus.setText("Expired");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
+            } else if (daysUntilExpiry <= 3) {
+                tvStatus.setText("Expiring Soon");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expiring));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
+            } else {
+                tvStatus.setText("Fresh");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_fresh));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
+            }
         }
     }
 }
