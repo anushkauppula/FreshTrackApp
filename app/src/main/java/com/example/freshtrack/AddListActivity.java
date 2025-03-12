@@ -1,8 +1,10 @@
 package com.example.freshtrack;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -10,6 +12,7 @@ import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -32,6 +35,13 @@ public class AddListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_list);
 
+        // Set up toolbar
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Add Item");
+        }
+
         // Initialize Firebase
         firebaseModel = new FirebaseModel();
         // mAuth = FirebaseAuth.getInstance();  // Comment out but keep for later
@@ -52,6 +62,9 @@ public class AddListActivity extends AppCompatActivity {
 
         // Setup save button
         btnSave.setOnClickListener(v -> saveItem());
+
+        // Set up bottom navigation
+        setupBottomNavigation();
     }
 
     private void setupCategorySpinner() {
@@ -158,5 +171,26 @@ public class AddListActivity extends AppCompatActivity {
             Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
         }
         */
+    }
+
+    private void setupBottomNavigation() {
+        View bottomNav = findViewById(R.id.bottomNav);
+        View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnSettings = bottomNav.findViewById(R.id.btnSettings);
+
+        btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+            startActivity(intent);
+            finish();
+        });
+
+        btnAdd.setOnClickListener(v -> {
+            // Already in Add page, do nothing or refresh
+        });
+
+        btnSettings.setOnClickListener(v -> {
+            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+        });
     }
 }
