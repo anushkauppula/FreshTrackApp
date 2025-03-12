@@ -46,7 +46,7 @@
                 android:background="@drawable/search_background"
                 android:drawableStart="@drawable/ic_search"
                 android:drawablePadding="8dp"
-                android:hint="Search items..."
+                android:hint="Search by name or category..."
                 android:textColorHint="#757575"
                 android:textColor="#212121"
                 android:padding="12dp"

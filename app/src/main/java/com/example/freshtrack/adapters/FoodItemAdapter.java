@@ -38,7 +38,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         this.firebaseModel = new FirebaseModel();
     }
 
-    // Add this method for filtering
+    // Update the filter method to search by both name and category
     public void filter(String query) {
         foodItemsFiltered.clear();
         if (query.isEmpty()) {
@@ -46,7 +46,9 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         } else {
             String searchQuery = query.toLowerCase();
             for (FoodItem item : foodItems) {
-                if (item.getName().toLowerCase().contains(searchQuery)) {
+                // Check if either the name or category contains the search query
+                if (item.getName().toLowerCase().contains(searchQuery) || 
+                    item.getCategory().toLowerCase().contains(searchQuery)) {
                     foodItemsFiltered.add(item);
                 }
             }
