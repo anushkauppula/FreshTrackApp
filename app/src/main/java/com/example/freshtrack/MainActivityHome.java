@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.freshtrack.adapters.FoodItemAdapter;
 import com.example.freshtrack.models.FoodItem;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -28,7 +27,6 @@ public class MainActivityHome extends AppCompatActivity {
     private RecyclerView recyclerView;
     private FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
-    private FloatingActionButton fabAddFood;
     private EditText searchBox;
 
     @Override
@@ -42,13 +40,6 @@ public class MainActivityHome extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Fresh Track");
         }
-
-        // Initialize FAB and set click listener
-        fabAddFood = findViewById(R.id.fabAddFood);
-        fabAddFood.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivityHome.this, AddListActivity.class);
-            startActivity(intent);
-        });
 
         // Initialize Firebase
         firebaseModel = new FirebaseModel();
@@ -78,8 +69,33 @@ public class MainActivityHome extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
+        // Set up bottom navigation
+        setupBottomNavigation();
+
         // Load food items
         loadFoodItems();
+    }
+
+    private void setupBottomNavigation() {
+        View bottomNav = findViewById(R.id.bottomNav);
+        View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnSettings = bottomNav.findViewById(R.id.btnSettings);
+
+        btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivityHome.this, DashboardActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
+        btnAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivityHome.this, AddListActivity.class);
+            startActivity(intent);
+        });
+
+        btnSettings.setOnClickListener(v -> {
+            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void loadFoodItems() {

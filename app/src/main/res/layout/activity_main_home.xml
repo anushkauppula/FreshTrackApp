@@ -28,6 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:layout_marginBottom="72dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- Search box in a CardView for elevation -->
@@ -67,19 +68,12 @@
 
     </LinearLayout>
 
-    <!-- Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddFood"
-        android:layout_width="wrap_content"
+    <!-- Include bottom navigation -->
+    <include
+        android:id="@+id/bottomNav"
+        layout="@layout/bottom_nav_footer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/add"
-        android:contentDescription="@string/add"
-        app:backgroundTint="?attr/colorPrimary"
-        app:tint="@android:color/white"
-        app:elevation="6dp"
-        app:fabSize="normal"
-        android:layout_margin="16dp"
-        app:layout_anchor="@id/recyclerView"
-        app:layout_anchorGravity="bottom|end"/>
+        android:layout_gravity="bottom"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

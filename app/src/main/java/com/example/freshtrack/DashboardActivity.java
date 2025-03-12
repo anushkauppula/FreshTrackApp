@@ -2,39 +2,25 @@ package com.example.freshtrack;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.freshtrack.models.FoodItem;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.Query;
+import android.animation.ValueAnimator;
+import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.android.material.navigation.NavigationView;
-import android.animation.ValueAnimator;
-import android.widget.ImageButton;
-import android.util.Log;
 
 public class DashboardActivity extends AppCompatActivity {
     private TextView userNameText;
@@ -48,9 +34,6 @@ public class DashboardActivity extends AppCompatActivity {
     private RecentActivityAdapter recentActivityAdapter;
     private ListenerRegistration recentActivityListener;
     private ListenerRegistration statsListener;
-    private DrawerLayout drawerLayout;
-    private ActionBarDrawerToggle drawerToggle;
-    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +47,6 @@ public class DashboardActivity extends AppCompatActivity {
 
         // Check if user is authenticated
         if (currentUser == null) {
-            // User is not logged in, redirect to authentication
             Intent intent = new Intent(DashboardActivity.this, MainActivityAuthentication.class);
             startActivity(intent);
             finish();
@@ -78,32 +60,6 @@ public class DashboardActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Fresh Track");
         }
 
-        // Set up navigation drawer
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
-        
-        drawerToggle = new ActionBarDrawerToggle(
-            this, 
-            drawerLayout, 
-            toolbar,
-            R.string.navigation_drawer_open,
-            R.string.navigation_drawer_close
-        ) {
-            @Override
-            public void onDrawerSlide(View drawerView, float slideOffset) {
-                super.onDrawerSlide(drawerView, slideOffset);
-            }
-        };
-        
-        // Set the custom hamburger icon
-        toolbar.setNavigationIcon(R.drawable.menu);
-        
-        drawerLayout.addDrawerListener(drawerToggle);
-        drawerToggle.setDrawerIndicatorEnabled(true);
-        drawerToggle.syncState();
-
-        setupNavigationView();
-
         // Initialize views
         initializeViews();
         
@@ -115,6 +71,9 @@ public class DashboardActivity extends AppCompatActivity {
 
         // Set up real-time listeners
         setupRealtimeListeners();
+
+        // Set up bottom navigation
+        setupBottomNavigation();
     }
 
     private void initializeViews() {
@@ -131,16 +90,10 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        FloatingActionButton addItemFab = findViewById(R.id.addItemFab);
         MaterialCardView viewAllCard = findViewById(R.id.viewAllCard);
         MaterialCardView totalItemsCard = findViewById(R.id.totalItemsCard);
         MaterialCardView expiringSoonCard = findViewById(R.id.expiringSoonCard);
         MaterialCardView expiredCard = findViewById(R.id.expiredCard);
-
-        addItemFab.setOnClickListener(v -> {
-            Intent intent = new Intent(DashboardActivity.this, AddListActivity.class);
-            startActivity(intent);
-        });
 
         viewAllCard.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
@@ -228,7 +181,7 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
 
-    private void updateStatistics(List<com.google.firebase.firestore.DocumentSnapshot> documents) {
+    private void updateStatistics(List<DocumentSnapshot> documents) {
         int total = documents.size();
         int expiringSoon = 0;
         int expired = 0;
@@ -279,69 +232,25 @@ public class DashboardActivity extends AppCompatActivity {
         animator.start();
     }
 
-    private void setupNavigationView() {
-        // Set up header click listener
-        View headerView = navigationView.getHeaderView(0);
-        TextView titleView = headerView.findViewById(R.id.nav_header_title);
-        ImageButton signOutButton = headerView.findViewById(R.id.btnSignOut);
+    private void setupBottomNavigation() {
+        View bottomNav = findViewById(R.id.bottomNav);
+        View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
-        // Set up sign out button click listener
-        signOutButton.setOnClickListener(v -> {
-            // Sign out from Firebase
-            firebaseAuth.signOut();
-            
-            // Navigate to login screen
-            Intent intent = new Intent(DashboardActivity.this, MainActivityAuthentication.class);
-            // Clear the back stack so user can't go back after signing out
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        btnHome.setOnClickListener(v -> {
+            // Already on home, do nothing or refresh
+            recreate();
+        });
+
+        btnAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, AddListActivity.class);
             startActivity(intent);
-            finish();
         });
 
-        titleView.setOnClickListener(v -> {
-            // Refresh current activity
-            Intent intent = new Intent(this, DashboardActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            drawerLayout.closeDrawer(GravityCompat.START);
+        btnSettings.setOnClickListener(v -> {
+            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
         });
-
-        navigationView.setNavigationItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            
-            if (itemId == R.id.nav_home) {
-                // Refresh dashboard
-                Intent intent = new Intent(this, DashboardActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-            } else if (itemId == R.id.nav_settings) {
-                Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.nav_notifications) {
-                Toast.makeText(this, "Notifications coming soon", Toast.LENGTH_SHORT).show();
-            }
-            
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-        });
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (drawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
