@@ -126,9 +126,25 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
             
             tvFoodName.setText(item.getName());
-            tvExpiryDate.setText(dateFormat.format(new Date(item.getExpiryDate())));
-            tvStatus.setText(item.getStatusText());
-            tvStatus.setTextColor(item.getStatusColor());
+            tvExpiryDate.setText("Expires: " + dateFormat.format(new Date(item.getExpiryDate())));
+            
+            // Set status with appropriate background and text color
+            TextView tvStatus = this.tvStatus;
+            long daysUntilExpiry = (item.getExpiryDate() - System.currentTimeMillis()) / (24 * 60 * 60 * 1000);
+            
+            if (daysUntilExpiry < 0) {
+                tvStatus.setText("Expired");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.red_700));
+            } else if (daysUntilExpiry <= 3) {
+                tvStatus.setText("Expiring Soon");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expiring));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.orange_700));
+            } else {
+                tvStatus.setText("Fresh");
+                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_fresh));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.green_700));
+            }
         }
     }
 }
