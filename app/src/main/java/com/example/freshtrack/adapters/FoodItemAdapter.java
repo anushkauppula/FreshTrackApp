@@ -135,15 +135,15 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             if (daysUntilExpiry < 0) {
                 tvStatus.setText("Expired");
                 tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.red_700));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
             } else if (daysUntilExpiry <= 3) {
                 tvStatus.setText("Expiring Soon");
                 tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expiring));
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.orange_700));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
             } else {
                 tvStatus.setText("Fresh");
                 tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_fresh));
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.green_700));
+                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
             }
         }
     }
