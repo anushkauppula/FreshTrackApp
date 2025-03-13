@@ -52,40 +52,52 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        // Show loading state
+        Toast.makeText(this, "Logging in...", Toast.LENGTH_SHORT).show();
+
         // First try to find user by username
         firebaseModel.getUserByUsername(identifier)
             .addOnSuccessListener(dataSnapshot -> {
+                boolean userFound = false;
                 if (dataSnapshot.exists()) {
-                    // User found by username
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        User user = snapshot.getValue(User.class);
-                        if (user != null) {
-                            // Login with email
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        User user = userSnapshot.getValue(User.class);
+                        if (user != null && user.getUsername() != null && 
+                            user.getUsername().equals(identifier)) {
+                            Log.d(TAG, "Found user by username: " + user.getUsername());
+                            userFound = true;
                             loginWithEmail(user.getEmail(), password);
-                            return;
+                            break;
                         }
                     }
                 }
-                // No user found with username, try direct email login
-                loginWithEmail(identifier, password);
+                
+                if (!userFound) {
+                    Log.d(TAG, "No user found with username: " + identifier + ", trying as email");
+                    loginWithEmail(identifier, password);
+                }
             })
             .addOnFailureListener(e -> {
-                // Error checking username, try direct email login
+                Log.e(TAG, "Error searching for user: " + e.getMessage());
                 loginWithEmail(identifier, password);
             });
     }
 
     private void loginWithEmail(String email, String password) {
+        Log.d(TAG, "Attempting login with email: " + email);
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this, task -> {
                 if (task.isSuccessful()) {
                     Log.d(TAG, "signInWithEmail:success");
-                    startActivity(new Intent(LoginActivity.this, MainActivityHome.class));
-                    finish();
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    if (user != null) {
+                        startActivity(new Intent(LoginActivity.this, MainActivityHome.class));
+                        finish();
+                    }
                 } else {
                     Log.w(TAG, "signInWithEmail:failure", task.getException());
                     Toast.makeText(LoginActivity.this, 
-                        "Authentication failed: " + task.getException().getMessage(),
+                        "Authentication failed. Please check your credentials and try again.",
                         Toast.LENGTH_SHORT).show();
                 }
             });

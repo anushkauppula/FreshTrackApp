@@ -94,9 +94,25 @@ public class FirebaseModel {
     }
 
     public Task<DataSnapshot> getUserByUsername(String username) {
+        Log.d("FirebaseModel", "Searching for user with username: " + username);
+        // Query all users and check username
         return databaseReference.child(USERS_PATH)
-            .orderByChild("username")
-            .equalTo(username)
-            .get();
+            .get()
+            .addOnSuccessListener(dataSnapshot -> {
+                Log.d("FirebaseModel", "Got users data, exists: " + dataSnapshot.exists());
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        User user = userSnapshot.getValue(User.class);
+                        if (user != null) {
+                            Log.d("FirebaseModel", "Checking user: " + user.getUsername());
+                            if (user.getUsername().equals(username)) {
+                                Log.d("FirebaseModel", "Found matching user with email: " + user.getEmail());
+                            }
+                        }
+                    }
+                }
+            })
+            .addOnFailureListener(e -> 
+                Log.e("FirebaseModel", "Error searching for user: " + e.getMessage()));
     }
 }
