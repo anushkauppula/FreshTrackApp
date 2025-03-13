@@ -13,48 +13,48 @@ public class FoodItem {
     public static final int STATUS_FRESH = 2;
     
     private String id;
-    private String foodName;
-    private String expiryDate;
+    private String name;
+    private long dateAdded;
+    private long expiryDate;
     private String userId;
-    private long timestamp;
+    private String category;
+    private int quantity;
+    private String unit;
+    private String notes;
+    private String weight;
+    private String count;
 
-    // Empty constructor required for Firebase
+    // Empty constructor required for Firestore
     public FoodItem() {
     }
 
-    public FoodItem(String foodName, String expiryDate, String userId) {
-        this.foodName = foodName;
+    public FoodItem(String name, long dateAdded, long expiryDate, String userId, 
+                   String category, int quantity, String unit, String notes, 
+                   String weight, String count) {
+        this.name = name;
+        this.dateAdded = dateAdded;
         this.expiryDate = expiryDate;
         this.userId = userId;
-        this.timestamp = System.currentTimeMillis();
+        this.category = category;
+        this.quantity = quantity;
+        this.unit = unit;
+        this.notes = notes;
+        this.weight = weight;
+        this.count = count;
     }
 
     // Calculate status based on expiry date
     public int calculateStatus() {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-            Date expDate = sdf.parse(expiryDate);
-            Date today = new Date();
-            
-            // Reset hours, minutes, seconds and millis for accurate day comparison
-            today.setHours(0);
-            today.setMinutes(0);
-            today.setSeconds(0);
-            
-            // Calculate days difference
-            long diffInMillies = expDate.getTime() - today.getTime();
-            long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-            
-            if (diffInDays < 0) {
-                return STATUS_EXPIRED;
-            } else if (diffInDays <= 1) { // Today or tomorrow
-                return STATUS_EXPIRING_SOON;
-            } else {
-                return STATUS_FRESH;
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return STATUS_FRESH; // Default to fresh if there's an error
+        long currentTime = System.currentTimeMillis();
+        long diffInMillies = expiryDate - currentTime;
+        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+        
+        if (diffInDays < 0) {
+            return STATUS_EXPIRED;
+        } else if (diffInDays <= 1) { // Today or tomorrow
+            return STATUS_EXPIRING_SOON;
+        } else {
+            return STATUS_FRESH;
         }
     }
 
@@ -85,14 +85,91 @@ public class FoodItem {
     }
 
     // Getters and setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getFoodName() { return foodName; }
-    public void setFoodName(String foodName) { this.foodName = foodName; }
-    public String getExpiryDate() { return expiryDate; }
-    public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public long getTimestamp() { return timestamp; }
-    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public long getDateAdded() {
+        return dateAdded;
+    }
+
+    public void setDateAdded(long dateAdded) {
+        this.dateAdded = dateAdded;
+    }
+
+    public long getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(long expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public String getWeight() {
+        return weight;
+    }
+
+    public void setWeight(String weight) {
+        this.weight = weight;
+    }
+
+    public String getCount() {
+        return count;
+    }
+
+    public void setCount(String count) {
+        this.count = count;
+    }
 } 
