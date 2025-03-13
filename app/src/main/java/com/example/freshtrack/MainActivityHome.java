@@ -9,6 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import android.content.SharedPreferences;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
 
 import com.example.freshtrack.adapters.FoodItemAdapter;
 import com.example.freshtrack.models.FoodItem;
@@ -20,9 +25,6 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import android.util.Log;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.EditText;
 
 public class MainActivityHome extends AppCompatActivity {
     private FirebaseModel firebaseModel;
@@ -30,6 +32,8 @@ public class MainActivityHome extends AppCompatActivity {
     private FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
     private EditText searchBox;
+    private static final String PREFS_NAME = "LayoutPrefs";
+    private static final String KEY_LAYOUT = "layout_type";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +52,11 @@ public class MainActivityHome extends AppCompatActivity {
 
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setReverseLayout(false);
-        layoutManager.setStackFromEnd(false);
-        recyclerView.setLayoutManager(layoutManager);
         foodItems = new ArrayList<>();
         adapter = new FoodItemAdapter(foodItems);
+        
+        // Set layout based on user preference
+        setLayoutManager();
         recyclerView.setAdapter(adapter);
 
         // Initialize search functionality
@@ -125,5 +128,29 @@ public class MainActivityHome extends AppCompatActivity {
                     }
                 });
         }
+    }
+
+    private void setLayoutManager() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String layoutType = prefs.getString(KEY_LAYOUT, "list");
+        
+        if (layoutType.equals("grid")) {
+            // Use GridLayoutManager with 2 columns
+            GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+            recyclerView.setLayoutManager(layoutManager);
+        } else {
+            // Use LinearLayoutManager for list view
+            LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+            layoutManager.setReverseLayout(false);
+            layoutManager.setStackFromEnd(false);
+            recyclerView.setLayoutManager(layoutManager);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check if layout preference has changed
+        setLayoutManager();
     }
 }
