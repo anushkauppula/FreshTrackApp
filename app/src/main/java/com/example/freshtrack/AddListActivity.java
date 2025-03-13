@@ -191,7 +191,7 @@ public class AddListActivity extends AppCompatActivity {
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
-            Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+            Intent intent = new Intent(AddListActivity.this, DashboardActivity.class);
             startActivity(intent);
             finish();
         });

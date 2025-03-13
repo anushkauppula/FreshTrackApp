@@ -5,14 +5,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Select Layout"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
-
     <RadioGroup
         android:id="@+id/layoutRadioGroup"
         android:layout_width="match_parent"

@@ -99,7 +99,8 @@ public class MainActivityHome extends AppCompatActivity {
         });
 
         btnSettings.setOnClickListener(v -> {
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivityHome.this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
