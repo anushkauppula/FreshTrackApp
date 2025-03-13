@@ -130,4 +130,7 @@
     <color name="green_700">#388E3C</color>
     <color name="orange_700">#F57C00</color>
     <color name="red_700">#D32F2F</color>
+    <color name="fresh_green">#4CAF50</color>
+    <color name="expiring_soon_orange">#FF9800</color>
+    <color name="expired_red">#F44336</color>
 </resources>
