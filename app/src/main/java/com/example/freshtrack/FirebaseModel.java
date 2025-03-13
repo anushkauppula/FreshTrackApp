@@ -2,6 +2,7 @@ package com.example.freshtrack;
 
 import com.example.freshtrack.models.FoodItem;
 import com.example.freshtrack.models.User;
+import com.example.freshtrack.models.UserSettings;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.database.DatabaseReference;
@@ -12,11 +13,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Map;
 import android.util.Log;
+import java.util.HashMap;
 
 public class FirebaseModel {
     private final DatabaseReference databaseReference;
     private static final String FOOD_ITEMS_PATH = "food_items";
     private static final String USERS_PATH = "users";
+    private static final String USER_SETTINGS_PATH = "user_settings";
     private FirebaseFirestore db;
 
     public FirebaseModel() {
@@ -114,5 +117,54 @@ public class FirebaseModel {
             })
             .addOnFailureListener(e -> 
                 Log.e("FirebaseModel", "Error searching for user: " + e.getMessage()));
+    }
+
+    // User Settings operations
+    public Task<Void> createUserSettings(UserSettings settings) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(settings.getUserId())
+            .setValue(settings);
+    }
+
+    public Task<DataSnapshot> getUserSettings(String userId) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .get();
+    }
+
+    public Task<Void> updateUserSettings(String userId, Map<String, Object> updates) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .updateChildren(updates);
+    }
+
+    public Task<Void> updateLayoutType(String userId, String layoutType) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .child("layoutType")
+            .setValue(layoutType);
+    }
+
+    public Task<Void> updateTheme(String userId, String theme) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .child("theme")
+            .setValue(theme);
+    }
+
+    public Task<Void> updateNotificationSettings(String userId, boolean enabled, int days) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("notificationsEnabled", enabled);
+        updates.put("expiryNotificationDays", days);
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .updateChildren(updates);
+    }
+
+    public Task<Void> updateDeleteConfirmation(String userId, boolean showConfirmation) {
+        return databaseReference.child(USER_SETTINGS_PATH)
+            .child(userId)
+            .child("showDeleteConfirmation")
+            .setValue(showConfirmation);
     }
 }

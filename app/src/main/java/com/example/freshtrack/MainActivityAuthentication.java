@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.example.freshtrack.models.User;
+import com.example.freshtrack.models.UserSettings;
 
 public class MainActivityAuthentication extends AppCompatActivity {
     private EditText emailEditText;
@@ -91,30 +92,7 @@ public class MainActivityAuthentication extends AppCompatActivity {
                     FirebaseUser firebaseUser = mAuth.getCurrentUser();
                     if (firebaseUser != null) {
                         // Create user profile
-                        User user = new User(
-                            firebaseUser.getUid(),
-                            firstName,
-                            lastName,
-                            username,
-                            email
-                        );
-
-                        // Save user to database
-                        firebaseModel.createUser(user)
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d(TAG, "User profile created successfully");
-                                Toast.makeText(MainActivityAuthentication.this,
-                                    "Account created successfully",
-                                    Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(MainActivityAuthentication.this, MainActivityHome.class));
-                                finish();
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Error creating user profile", e);
-                                Toast.makeText(MainActivityAuthentication.this,
-                                    "Error creating user profile: " + e.getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                            });
+                        createNewUser(firebaseUser.getUid(), email, firstName, lastName, username);
                     }
                 } else {
                     Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -122,6 +100,33 @@ public class MainActivityAuthentication extends AppCompatActivity {
                         "Authentication failed: " + task.getException().getMessage(),
                         Toast.LENGTH_SHORT).show();
                 }
+            });
+    }
+
+    private void createNewUser(String userId, String email, String firstName, String lastName, String username) {
+        User newUser = new User(userId, firstName, lastName, username, email);
+        UserSettings newUserSettings = new UserSettings(userId);
+
+        firebaseModel.createUser(newUser)
+            .addOnSuccessListener(aVoid -> {
+                // After creating user, create their settings
+                firebaseModel.createUserSettings(newUserSettings)
+                    .addOnSuccessListener(aVoid2 -> {
+                        Toast.makeText(MainActivityAuthentication.this, 
+                            "Account created successfully", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivityAuthentication.this, DashboardActivity.class));
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error creating user settings: " + e.getMessage());
+                        Toast.makeText(MainActivityAuthentication.this, 
+                            "Error creating user settings", Toast.LENGTH_SHORT).show();
+                    });
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Error creating user: " + e.getMessage());
+                Toast.makeText(MainActivityAuthentication.this, 
+                    "Error creating account", Toast.LENGTH_SHORT).show();
             });
     }
 

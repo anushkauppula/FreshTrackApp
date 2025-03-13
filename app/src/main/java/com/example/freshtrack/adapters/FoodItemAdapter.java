@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import com.google.firebase.auth.FirebaseAuth;
+import java.util.Calendar;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -86,20 +87,36 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
         // Calculate status based on expiry date
         long currentTime = System.currentTimeMillis();
-        long timeUntilExpiry = item.getExpiryDate() - currentTime;
-        long threeDaysInMillis = 3 * 24 * 60 * 60 * 1000L;
+        
+        // Reset current time to start of day (midnight)
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+        
+        // Get expiry date calendar
+        Calendar expiryCalendar = Calendar.getInstance();
+        expiryCalendar.setTimeInMillis(item.getExpiryDate());
+        expiryCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        expiryCalendar.set(Calendar.MINUTE, 0);
+        expiryCalendar.set(Calendar.SECOND, 0);
+        expiryCalendar.set(Calendar.MILLISECOND, 0);
+
+        // Calculate days until expiry
+        long daysUntilExpiry = (expiryCalendar.getTimeInMillis() - today.getTimeInMillis()) / (24 * 60 * 60 * 1000);
 
         TextView statusView = holder.tvStatus;
-        if (timeUntilExpiry < 0) {
-            // Expired
+        if (daysUntilExpiry < 0) {
+            // Expired (before today)
             statusView.setText("Expired");
             statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.expired_red));
-        } else if (timeUntilExpiry <= threeDaysInMillis) {
-            // Expiring Soon
+        } else if (daysUntilExpiry <= 2) {
+            // Expiring Soon (today, tomorrow, or day after tomorrow)
             statusView.setText("Expiring Soon");
             statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.expiring_soon_orange));
         } else {
-            // Fresh
+            // Fresh (3 or more days until expiry)
             statusView.setText("Fresh");
             statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.fresh_green));
         }
