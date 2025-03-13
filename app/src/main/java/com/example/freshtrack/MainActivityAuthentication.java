@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -43,6 +44,13 @@ public class MainActivityAuthentication extends AppCompatActivity {
 
         // Set up click listener for signup
         signUpButton.setOnClickListener(v -> createAccount());
+
+        // Add at the end of onCreate
+        TextView loginPrompt = findViewById(R.id.loginPrompt);
+        loginPrompt.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivityAuthentication.this, LoginActivity.class);
+            startActivity(intent);
+        });
     }
 
     @Override
