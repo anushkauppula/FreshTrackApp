@@ -43,47 +43,6 @@ public class FoodItem {
         this.count = count;
     }
 
-    // Calculate status based on expiry date
-    public int calculateStatus() {
-        long currentTime = System.currentTimeMillis();
-        long diffInMillies = expiryDate - currentTime;
-        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-        
-        if (diffInDays < 0) {
-            return STATUS_EXPIRED;
-        } else if (diffInDays <= 1) { // Today or tomorrow
-            return STATUS_EXPIRING_SOON;
-        } else {
-            return STATUS_FRESH;
-        }
-    }
-
-    public String getStatusText() {
-        switch (calculateStatus()) {
-            case STATUS_EXPIRED:
-                return "Expired";
-            case STATUS_EXPIRING_SOON:
-                return "Expiring Soon";
-            case STATUS_FRESH:
-                return "Fresh";
-            default:
-                return "Unknown";
-        }
-    }
-
-    public int getStatusColor() {
-        switch (calculateStatus()) {
-            case STATUS_EXPIRED:
-                return Color.RED; // Use same red as delete background
-            case STATUS_EXPIRING_SOON:
-                return Color.parseColor("#FFA500"); // Orange
-            case STATUS_FRESH:
-                return Color.GREEN;
-            default:
-                return Color.GRAY;
-        }
-    }
-
     // Getters and setters
     public String getId() {
         return id;
