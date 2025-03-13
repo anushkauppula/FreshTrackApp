@@ -13,12 +13,26 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import com.example.freshtrack.models.FoodItem;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import com.github.dhaval2404.imagepicker.ImagePicker;
+import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.IOException;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -28,8 +42,11 @@ public class AddListActivity extends AppCompatActivity {
     private EditText etWeight;
     private EditText etCount;
     private Button btnSave;
+    private Button btnScanCamera;
     private FirebaseModel firebaseModel;
     private FirebaseAuth mAuth;
+    private TextRecognizer textRecognizer;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +82,23 @@ public class AddListActivity extends AppCompatActivity {
         etWeight = findViewById(R.id.etWeight);
         etCount = findViewById(R.id.etCount);
         btnSave = findViewById(R.id.btnSave);
+        btnScanCamera = findViewById(R.id.btnScanCamera);
+
+        // Initialize ML Kit Text Recognizer
+        textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+
+        // Initialize image picker launcher
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri imageUri = result.getData().getData();
+                    if (imageUri != null) {
+                        processImage(imageUri);
+                    }
+                }
+            }
+        );
 
         // Setup category spinner
         setupCategorySpinner();
@@ -75,8 +109,105 @@ public class AddListActivity extends AppCompatActivity {
         // Setup save button
         btnSave.setOnClickListener(v -> saveItem());
 
+        // Setup camera button
+        btnScanCamera.setOnClickListener(v -> checkCameraPermissionAndOpen());
+
         // Set up bottom navigation
         setupBottomNavigation();
+    }
+
+    private void checkCameraPermissionAndOpen() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Request camera permission
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, 100);
+        } else {
+            openCamera();
+        }
+    }
+
+    private void openCamera() {
+        ImagePicker.with(this)
+                .crop()
+                .compress(1024)
+                .maxResultSize(1080, 1080)
+                .createIntent(intent -> {
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    intent.setType("image/*");
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/jpeg", "image/png"});
+                    imagePickerLauncher.launch(intent);
+                    return null;
+                });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+            } else {
+                Toast.makeText(this, "Camera permission is required to scan text", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void processImage(Uri imageUri) {
+        try {
+            Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+            InputImage image = InputImage.fromBitmap(bitmap, 0);
+            
+            textRecognizer.process(image)
+                    .addOnSuccessListener(text -> {
+                        // Process the recognized text
+                        String recognizedText = text.getText();
+                        // Try to extract information from the recognized text
+                        String[] lines = recognizedText.split("\n");
+                        if (lines.length > 0) {
+                            // Set food name from first line
+                            etFoodName.setText(lines[0]);
+                            
+                            // Try to find weight and count information
+                            for (String line : lines) {
+                                line = line.toLowerCase();
+                                // Look for weight information
+                                if (line.contains("weight") || line.contains("lbs") || line.contains("pounds")) {
+                                    String weight = line.replaceAll("[^0-9.]", "");
+                                    if (!weight.isEmpty()) {
+                                        etWeight.setText(weight);
+                                    }
+                                }
+                                // Look for count information
+                                if (line.contains("count") || line.contains("quantity") || line.contains("qty")) {
+                                    String count = line.replaceAll("[^0-9]", "");
+                                    if (!count.isEmpty()) {
+                                        etCount.setText(count);
+                                    }
+                                }
+                                // Look for date information
+                                if (line.matches(".*\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4}.*")) {
+                                    try {
+                                        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                                        String dateStr = line.replaceAll("[^0-9/]", "");
+                                        sdf.parse(dateStr);
+                                        etExpiryDate.setText(dateStr);
+                                    } catch (Exception e) {
+                                        // Ignore invalid date formats
+                                    }
+                                }
+                            }
+                            
+                            Toast.makeText(this, "Text recognized successfully", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "No text found in image", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Failed to recognize text: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        } catch (IOException e) {
+            Toast.makeText(this, "Error processing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupCategorySpinner() {
@@ -155,6 +286,7 @@ public class AddListActivity extends AppCompatActivity {
             return;
         }
         
+        // Create FoodItem with all fields
         FoodItem foodItem = new FoodItem(
             foodName,              // name
             dateAdded,            // dateAdded (current timestamp)
