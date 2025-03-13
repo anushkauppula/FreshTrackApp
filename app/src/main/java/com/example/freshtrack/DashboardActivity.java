@@ -116,7 +116,8 @@ public class DashboardActivity extends AppCompatActivity {
                     if (dataSnapshot.exists()) {
                         User user = dataSnapshot.getValue(User.class);
                         if (user != null) {
-                            userNameText.setText(user.getFirstName());
+                            String fullName = user.getFirstName() + " " + user.getLastName();
+                            userNameText.setText(fullName);
                         }
                     }
                 })

@@ -31,37 +31,30 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Top Welcome Card -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Welcome Text -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="8dp"
-                app:cardBackgroundColor="?attr/colorSurface">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="Hello, "
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Hello,"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary"/>
-
-                    <TextView
-                        android:id="@+id/userNameText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:textColor="?attr/colorPrimary"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/userNameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"/>
+            </LinearLayout>
 
             <!-- Summary Cards -->
             <LinearLayout
@@ -86,7 +79,7 @@
                         <TextView
                             android:id="@+id/totalItemsCount"
                             style="@style/DashboardCardNumber"
-                            android:textColor="?attr/colorPrimary"/>
+                            android:textColor="@color/fresh_green"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -113,7 +106,7 @@
                         <TextView
                             android:id="@+id/expiringSoonCount"
                             style="@style/DashboardCardNumber"
-                            android:textColor="?attr/colorSecondary"/>
+                            android:textColor="@color/expiring_soon_orange"/>
 
                         <TextView
                             android:layout_width="wrap_content"
