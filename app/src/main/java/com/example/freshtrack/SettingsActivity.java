@@ -14,9 +14,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class SettingsActivity extends AppCompatActivity {
-    private static final String PREFS_NAME = "SettingsPrefs";
+    private static final String PREFS_NAME = "LayoutPrefs";
     private static final String KEY_THEME = "theme";
-    private static final String KEY_LAYOUT = "layout";
+    private static final String KEY_LAYOUT = "layout_type";
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
 
