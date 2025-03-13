@@ -10,6 +10,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -28,12 +29,23 @@ public class SettingsActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 
-        // Setup click listeners
-        findViewById(R.id.btnAccount).setOnClickListener(v -> {
-            Intent intent = new Intent(SettingsActivity.this, AccountSettingsActivity.class);
-            startActivity(intent);
-        });
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
+        //MaterialCardView accountSettingsCard = findViewById(R.id.accountSettingsCard);
+        MaterialCardView signOutCard = findViewById(R.id.signOutCard);
+
+//        accountSettingsCard.setOnClickListener(v -> {
+//            startActivity(new Intent(SettingsActivity.this, AccountSettingsActivity.class));
+//        });
+
+        signOutCard.setOnClickListener(v -> signOut());
+
+        // Setup click listeners
         findViewById(R.id.btnLayout).setOnClickListener(v -> showLayoutSelectionDialog());
         findViewById(R.id.btnTheme).setOnClickListener(v -> showThemeSelectionDialog());
 
@@ -125,5 +137,19 @@ public class SettingsActivity extends AppCompatActivity {
         btnSettings.setOnClickListener(v -> {
             // Already in settings, do nothing
         });
+    }
+
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 }
