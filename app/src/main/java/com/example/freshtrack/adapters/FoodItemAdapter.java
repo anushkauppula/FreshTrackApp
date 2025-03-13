@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -127,6 +128,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             // Store the item temporarily for undo
             String itemName = item.getName();
             String itemId = item.getId();
+            String userId = item.getUserId(); // Get the user ID from the item
 
             // Remove the item from the list temporarily
             foodItemsFiltered.remove(item);
@@ -144,7 +146,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
 
             // Customize Snackbar layout
             snackbar.setActionTextColor(context.getResources().getColor(android.R.color.holo_blue_light));
-            snackbar.setAnchorView(((MainActivityHome) context).findViewById(R.id.bottomNav)); // Set anchor to bottom nav
+            snackbar.setAnchorView(((MainActivityHome) context).findViewById(R.id.bottomNav));
             snackbar.show();
 
             // Delete the item from Firebase after a delay if not undone
@@ -153,7 +155,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
                 public void onDismissed(Snackbar transientBottomBar, int event) {
                     if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
                         // If the Snackbar was dismissed without clicking "UNDO", delete the item
-                        firebaseModel.deleteFoodItem(itemId)
+                        firebaseModel.deleteFoodItem(userId, itemId) // Pass both userId and itemId
                                 .addOnSuccessListener(aVoid -> {
                                     Toast.makeText(context, "Item deleted permanently", Toast.LENGTH_SHORT).show();
                                 })
