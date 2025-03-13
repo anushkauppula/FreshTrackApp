@@ -249,7 +249,8 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         btnSettings.setOnClickListener(v -> {
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(DashboardActivity.this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 

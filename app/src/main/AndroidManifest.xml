@@ -47,9 +47,11 @@
             android:name=".MainActivityHome"
             android:exported="false" />
         <activity
-            android:name=".ProfileActivity"
-            android:exported="false"
-            android:label="Profile"/>
+            android:name=".SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AccountSettingsActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
