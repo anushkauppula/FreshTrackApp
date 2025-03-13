@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import com.example.freshtrack.models.FoodItem;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -28,12 +29,24 @@ public class AddListActivity extends AppCompatActivity {
     private EditText etCount;
     private Button btnSave;
     private FirebaseModel firebaseModel;
-    // private FirebaseAuth mAuth;  // Comment out but keep for later
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_list);
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+
+        // Check if user is logged in
+        if (mAuth.getCurrentUser() == null) {
+            // If not logged in, redirect to authentication
+            Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, MainActivityAuthentication.class));
+            finish();
+            return;
+        }
 
         // Set up toolbar
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
@@ -44,7 +57,6 @@ public class AddListActivity extends AppCompatActivity {
 
         // Initialize Firebase
         firebaseModel = new FirebaseModel();
-        // mAuth = FirebaseAuth.getInstance();  // Comment out but keep for later
 
         // Initialize views
         etFoodName = findViewById(R.id.etFoodName);
@@ -119,13 +131,17 @@ public class AddListActivity extends AppCompatActivity {
             return;
         }
 
-        /* Comment out authentication check for now
-        if (mAuth.getCurrentUser() != null) {
-            String userId = mAuth.getCurrentUser().getUid();
-        */
-        
-        // Temporarily use a fixed userId
-        String userId = "testUser123";
+        // Get current user
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, MainActivityAuthentication.class));
+            finish();
+            return;
+        }
+
+        // Get the current user's ID
+        String userId = currentUser.getUid();
         
         // Parse the expiry date string to timestamp
         long dateAdded = System.currentTimeMillis();
@@ -143,7 +159,7 @@ public class AddListActivity extends AppCompatActivity {
             foodName,              // name
             dateAdded,            // dateAdded (current timestamp)
             expiryTimestamp,      // expiryDate
-            userId,               // userId
+            userId,               // userId (from current user)
             category,             // category (from spinner)
             1,                    // quantity (default)
             "piece",              // unit (default)
@@ -153,7 +169,7 @@ public class AddListActivity extends AppCompatActivity {
         );
         
         // Add log before saving
-        Log.d("AddListActivity", "Attempting to save food item: " + foodName);
+        Log.d("AddListActivity", "Attempting to save food item: " + foodName + " for user: " + userId);
         
         firebaseModel.addFoodItem(foodItem)
             .addOnSuccessListener(aVoid -> {
@@ -166,11 +182,6 @@ public class AddListActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error saving food item: " + e.getMessage(), 
                     Toast.LENGTH_SHORT).show();
             });
-        /* Comment out auth else block
-        } else {
-            Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
-        }
-        */
     }
 
     private void setupBottomNavigation() {

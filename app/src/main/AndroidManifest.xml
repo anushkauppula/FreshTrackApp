@@ -36,7 +36,7 @@
             android:name=".MainActivitySignup"
             android:exported="false" />
         <activity
-            android:name=".MainActivityAuthentication"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,6 +51,13 @@
             android:exported="false" />
         <activity
             android:name=".AccountSettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:label="Profile"/>
+        <activity
+            android:name=".MainActivityAuthentication"
             android:exported="false" />
 
         <provider
