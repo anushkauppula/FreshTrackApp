@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "signInWithEmail:success");
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user != null) {
-                        startActivity(new Intent(LoginActivity.this, MainActivityHome.class));
+                        startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
                         finish();
                     }
                 } else {

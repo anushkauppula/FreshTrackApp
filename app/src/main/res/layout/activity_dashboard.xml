@@ -3,8 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_color">
+    android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -14,7 +13,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="#673AB7"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:title="Fresh Track"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
@@ -32,36 +31,30 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Top Welcome Card -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Welcome Text -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="8dp">
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="Hello, "
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Hello,"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_color"/>
-
-                    <TextView
-                        android:id="@+id/userNameText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:textColor="@color/primary_dark"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/userNameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"/>
+            </LinearLayout>
 
             <!-- Summary Cards -->
             <LinearLayout
@@ -73,7 +66,8 @@
                 <!-- Total Items Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/totalItemsCard"
-                    style="@style/DashboardCard">
+                    style="@style/DashboardCard"
+                    app:cardBackgroundColor="?attr/colorSurface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -85,21 +79,22 @@
                         <TextView
                             android:id="@+id/totalItemsCount"
                             style="@style/DashboardCardNumber"
-                            android:textColor="@color/primary_color"/>
+                            android:textColor="@color/fresh_green"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Fresh"
                             android:textAlignment="center"
-                            android:textColor="@color/text_secondary"/>
+                            android:textColor="?attr/colorOnSurface"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- Expiring Soon Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/expiringSoonCard"
-                    style="@style/DashboardCard">
+                    style="@style/DashboardCard"
+                    app:cardBackgroundColor="?attr/colorSurface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -111,14 +106,14 @@
                         <TextView
                             android:id="@+id/expiringSoonCount"
                             style="@style/DashboardCardNumber"
-                            android:textColor="@color/warning_color"/>
+                            android:textColor="@color/expiring_soon_orange"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Expiring Soon"
                             android:textAlignment="center"
-                            android:textColor="@color/text_secondary"/>
+                            android:textColor="?attr/colorOnSurface"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
@@ -132,7 +127,8 @@
                 <!-- Expired Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/expiredCard"
-                    style="@style/DashboardCard">
+                    style="@style/DashboardCard"
+                    app:cardBackgroundColor="?attr/colorSurface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -144,21 +140,22 @@
                         <TextView
                             android:id="@+id/expiredCount"
                             style="@style/DashboardCardNumber"
-                            android:textColor="@color/error_color"/>
+                            android:textColor="?attr/colorError"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Expired"
                             android:textAlignment="center"
-                            android:textColor="@color/text_secondary"/>
+                            android:textColor="?attr/colorOnSurface"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- View All Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/viewAllCard"
-                    style="@style/DashboardCard">
+                    style="@style/DashboardCard"
+                    app:cardBackgroundColor="?attr/colorSurface">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -171,48 +168,17 @@
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:src="@drawable/arrow24"
-                            app:tint="@color/primary_color"/>
+                            app:tint="?attr/colorPrimary"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="View All"
                             android:textAlignment="center"
-                            android:textColor="@color/text_secondary"/>
+                            android:textColor="?attr/colorOnSurface"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
-
-            <!-- Recent Activity Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Recent Activity"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary_color"
-                        android:layout_marginBottom="16dp"/>
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recentActivityRecyclerView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

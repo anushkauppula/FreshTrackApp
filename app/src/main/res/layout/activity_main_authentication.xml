@@ -70,7 +70,7 @@
             android:id="@+id/loginPrompt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Want to login?"
+            android:text="Want to Signin?"
             android:textColor="@color/design_default_color_primary"
             android:padding="8dp"/>
 

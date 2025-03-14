@@ -3,6 +3,7 @@ package com.example.freshtrack.adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.freshtrack.MainActivityHome;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import com.google.firebase.auth.FirebaseAuth;
+import java.util.Calendar;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -32,6 +35,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
     private FirebaseModel firebaseModel;
     private static final String PREFS_NAME = "DeleteDialogPrefs";
     private static final String KEY_DONT_SHOW_AGAIN = "dontShowDeleteDialog";
+    private Context context;
 
     public FoodItemAdapter(List<FoodItem> foodItems) {
         this.foodItems = foodItems;
@@ -60,15 +64,64 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
     @NonNull
     @Override
     public FoodItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
+        // Get context from parent view
+        context = parent.getContext();
+        View view = LayoutInflater.from(context)
                 .inflate(R.layout.item_food, parent, false);
         return new FoodItemViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull FoodItemViewHolder holder, int position) {
-        FoodItem item = foodItemsFiltered.get(position); // Use filtered list
-        holder.bind(item);
+        FoodItem item = foodItemsFiltered.get(position);
+        holder.tvFoodName.setText(item.getName());
+        
+        // Format and set expiry date
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        String expiryDate = sdf.format(new Date(item.getExpiryDate()));
+        holder.tvExpiryDate.setText("Expires: " + expiryDate);
+        
+        holder.tvCategory.setText("Category: " + item.getCategory());
+        holder.tvWeight.setText("Weight: " + item.getWeight());
+        holder.tvCount.setText("Count: " + item.getCount());
+
+        // Calculate status based on expiry date
+        long currentTime = System.currentTimeMillis();
+        
+        // Reset current time to start of day (midnight)
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+        
+        // Get expiry date calendar
+        Calendar expiryCalendar = Calendar.getInstance();
+        expiryCalendar.setTimeInMillis(item.getExpiryDate());
+        expiryCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        expiryCalendar.set(Calendar.MINUTE, 0);
+        expiryCalendar.set(Calendar.SECOND, 0);
+        expiryCalendar.set(Calendar.MILLISECOND, 0);
+
+        // Calculate days until expiry
+        long daysUntilExpiry = (expiryCalendar.getTimeInMillis() - today.getTimeInMillis()) / (24 * 60 * 60 * 1000);
+
+        TextView statusView = holder.tvStatus;
+        if (daysUntilExpiry < 0) {
+            // Expired (before today)
+            statusView.setText("Expired");
+            statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.expired_red));
+        } else if (daysUntilExpiry <= 2) {
+            // Expiring Soon (today, tomorrow, or day after tomorrow)
+            statusView.setText("Expiring Soon");
+            statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.expiring_soon_orange));
+        } else {
+            // Fresh (3 or more days until expiry)
+            statusView.setText("Fresh");
+            statusView.setBackgroundColor(ContextCompat.getColor(context, R.color.fresh_green));
+        }
+        statusView.setTextColor(Color.WHITE);
+        statusView.setPadding(8, 4, 8, 4);
     }
 
     @Override
@@ -95,6 +148,9 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         private TextView tvFoodName;
         private TextView tvExpiryDate;
         private TextView tvStatus;
+        private TextView tvCategory;
+        private TextView tvWeight;
+        private TextView tvCount;
         private Context context;
 
         public FoodItemViewHolder(@NonNull View itemView) {
@@ -103,6 +159,9 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             tvFoodName = itemView.findViewById(R.id.tvFoodName);
             tvExpiryDate = itemView.findViewById(R.id.tvExpiryDate);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            tvCategory = itemView.findViewById(R.id.tvCategory);
+            tvWeight = itemView.findViewById(R.id.tvWeight);
+            tvCount = itemView.findViewById(R.id.tvCount);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -190,40 +249,6 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
                     .setNegativeButton("Cancel", null);
 
             builder.create().show();
-        }
-
-        public void bind(FoodItem item) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
-
-            tvFoodName.setText(item.getName());
-            tvExpiryDate.setText("Expires: " + dateFormat.format(new Date(item.getExpiryDate())));
-            
-            // Set category, weight, and count
-            TextView tvCategory = itemView.findViewById(R.id.tvCategory);
-            TextView tvWeight = itemView.findViewById(R.id.tvWeight);
-            TextView tvCount = itemView.findViewById(R.id.tvCount);
-
-            tvCategory.setText("Category: " + item.getCategory());
-            tvWeight.setText("Weight: " + (item.getWeight() != null ? item.getWeight() + " lbs" : "N/A"));
-            tvCount.setText("Count: " + (item.getCount() != null ? item.getCount() : "N/A"));
-
-            // Set status with appropriate background and text color
-            TextView tvStatus = this.tvStatus;
-            long daysUntilExpiry = (item.getExpiryDate() - System.currentTimeMillis()) / (24 * 60 * 60 * 1000);
-            
-            if (daysUntilExpiry < 0) {
-                tvStatus.setText("Expired");
-                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expired));
-                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
-            } else if (daysUntilExpiry <= 3) {
-                tvStatus.setText("Expiring Soon");
-                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_expiring));
-                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
-            } else {
-                tvStatus.setText("Fresh");
-                tvStatus.setBackground(itemView.getContext().getDrawable(R.drawable.tag_fresh));
-                tvStatus.setTextColor(itemView.getContext().getColor(android.R.color.white));
-            }
         }
     }
 }

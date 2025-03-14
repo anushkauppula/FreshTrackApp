@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.freshtrack.models.FoodItem;
+import com.example.freshtrack.models.User;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,19 +22,22 @@ import android.animation.ValueAnimator;
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+import java.util.Calendar;
 
 public class DashboardActivity extends AppCompatActivity {
     private TextView userNameText;
     private TextView totalItemsCount;
     private TextView expiringSoonCount;
     private TextView expiredCount;
-    private RecyclerView recentActivityRecyclerView;
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore firestore;
     private FirebaseUser currentUser;
-    private RecentActivityAdapter recentActivityAdapter;
-    private ListenerRegistration recentActivityListener;
-    private ListenerRegistration statsListener;
+    private ValueEventListener statsListener;
+    private FirebaseModel firebaseModel;
+    private static final String TAG = "DashboardActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,19 +64,11 @@ public class DashboardActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Fresh Track");
         }
 
-        // Initialize views
+        // Initialize views and setup
         initializeViews();
-        
-        // Set up click listeners
         setupClickListeners();
-
-        // Load user data
         loadUserData();
-
-        // Set up real-time listeners
         setupRealtimeListeners();
-
-        // Set up bottom navigation
         setupBottomNavigation();
     }
 
@@ -81,12 +77,6 @@ public class DashboardActivity extends AppCompatActivity {
         totalItemsCount = findViewById(R.id.totalItemsCount);
         expiringSoonCount = findViewById(R.id.expiringSoonCount);
         expiredCount = findViewById(R.id.expiredCount);
-        recentActivityRecyclerView = findViewById(R.id.recentActivityRecyclerView);
-
-        // Set up RecyclerView
-        recentActivityRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recentActivityAdapter = new RecentActivityAdapter(new ArrayList<>());
-        recentActivityRecyclerView.setAdapter(recentActivityAdapter);
     }
 
     private void setupClickListeners() {
@@ -120,17 +110,18 @@ public class DashboardActivity extends AppCompatActivity {
     private void loadUserData() {
         if (currentUser != null) {
             String userId = currentUser.getUid();
-            firestore.collection("users").document(userId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String firstName = documentSnapshot.getString("firstName");
-                        String lastName = documentSnapshot.getString("lastName");
-                        String displayName = firstName != null ? firstName : 
-                            (currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "User");
-                        userNameText.setText(displayName);
+            firebaseModel = new FirebaseModel();
+            firebaseModel.getUserById(userId)
+                .addOnSuccessListener(dataSnapshot -> {
+                    if (dataSnapshot.exists()) {
+                        User user = dataSnapshot.getValue(User.class);
+                        if (user != null) {
+                            String fullName = user.getFirstName() + " " + user.getLastName();
+                            userNameText.setText(fullName);
+                        }
                     }
                 })
-                .addOnFailureListener(e -> userNameText.setText("User"));
+                .addOnFailureListener(e -> Log.e(TAG, "Error loading user data: " + e.getMessage()));
         }
     }
 
@@ -138,79 +129,63 @@ public class DashboardActivity extends AppCompatActivity {
         if (currentUser != null) {
             String userId = currentUser.getUid();
             
-            // Setup real-time listener for recent activities
-            Query recentItemsQuery = firestore.collection("food_items")
-                .whereEqualTo("userId", userId)
-                .orderBy("dateAdded", Query.Direction.DESCENDING)
-                .limit(5);
+            // Only keep the stats listener
+            statsListener = firebaseModel.getFoodItemsByUser(userId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        int fresh = 0;
+                        int expiringSoon = 0;
+                        int expired = 0;
 
-            recentActivityListener = recentItemsQuery.addSnapshotListener((snapshots, error) -> {
-                if (error != null) {
-                    Toast.makeText(this, "Error loading recent items: " + error.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                        // Reset current time to start of day (midnight)
+                        Calendar today = Calendar.getInstance();
+                        today.set(Calendar.HOUR_OF_DAY, 0);
+                        today.set(Calendar.MINUTE, 0);
+                        today.set(Calendar.SECOND, 0);
+                        today.set(Calendar.MILLISECOND, 0);
 
-                if (snapshots != null && !snapshots.isEmpty()) {
-                    List<FoodItem> recentItems = new ArrayList<>();
-                    for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots.getDocuments()) {
-                        FoodItem item = doc.toObject(FoodItem.class);
-                        if (item != null) {
-                            item.setId(doc.getId());
-                            recentItems.add(item);
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            FoodItem item = snapshot.getValue(FoodItem.class);
+                            if (item != null) {
+                                // Get expiry date calendar
+                                Calendar expiryCalendar = Calendar.getInstance();
+                                expiryCalendar.setTimeInMillis(item.getExpiryDate());
+                                expiryCalendar.set(Calendar.HOUR_OF_DAY, 0);
+                                expiryCalendar.set(Calendar.MINUTE, 0);
+                                expiryCalendar.set(Calendar.SECOND, 0);
+                                expiryCalendar.set(Calendar.MILLISECOND, 0);
+
+                                // Calculate days until expiry
+                                long daysUntilExpiry = (expiryCalendar.getTimeInMillis() - today.getTimeInMillis()) / (24 * 60 * 60 * 1000);
+                                
+                                if (daysUntilExpiry < 0) {
+                                    expired++;
+                                } else if (daysUntilExpiry <= 2) {
+                                    expiringSoon++;
+                                } else {
+                                    fresh++;
+                                }
+                            }
                         }
-                    }
-                    recentActivityAdapter.updateItems(recentItems);
-                }
-            });
 
-            // Setup real-time listener for statistics
-            statsListener = firestore.collection("food_items")
-                .whereEqualTo("userId", userId)
-                .addSnapshotListener((snapshots, error) -> {
-                    if (error != null) {
-                        Toast.makeText(this, "Error loading statistics: " + error.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
-                        return;
+                        // Update UI with animations
+                        updateCountsWithAnimation(fresh, expiringSoon, expired);
                     }
 
-                    if (snapshots != null) {
-                        updateStatistics(snapshots.getDocuments());
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        Log.e(TAG, "Error loading food stats: " + error.getMessage());
                     }
                 });
         }
     }
 
-    private void updateStatistics(List<DocumentSnapshot> documents) {
-        int total = documents.size();
-        int expiringSoon = 0;
-        int expired = 0;
-        long currentTime = System.currentTimeMillis();
-        long sevenDaysFromNow = currentTime + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-
-        Log.d("DashboardActivity", "Updating statistics. Total documents: " + total);
-
-        for (com.google.firebase.firestore.DocumentSnapshot doc : documents) {
-            FoodItem item = doc.toObject(FoodItem.class);
-            if (item != null) {
-                long expiryDate = item.getExpiryDate();
-                if (expiryDate < currentTime) {
-                    expired++;
-                } else if (expiryDate <= sevenDaysFromNow) {
-                    expiringSoon++;
-                }
-            }
-        }
-
-        Log.d("DashboardActivity", String.format("Counts - Total: %d, Expiring Soon: %d, Expired: %d", 
-            total, expiringSoon, expired));
-
-        // Update the TextViews with animations
+    private void updateCountsWithAnimation(int fresh, int expiringSoon, int expired) {
         if (totalItemsCount != null) {
-            Log.d("DashboardActivity", "Updating totalItemsCount TextView");
-            animateTextView(0, total, totalItemsCount);
+            animateTextView(0, fresh, totalItemsCount);
         } else {
-            Log.e("DashboardActivity", "totalItemsCount TextView is null!");
+            Log.e(TAG, "totalItemsCount TextView is null!");
         }
         
         if (expiringSoonCount != null) {
@@ -249,18 +224,18 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         btnSettings.setOnClickListener(v -> {
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(DashboardActivity.this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (recentActivityListener != null) {
-            recentActivityListener.remove();
-        }
         if (statsListener != null) {
-            statsListener.remove();
+            // Remove the listener from the Firebase reference
+            firebaseModel.getFoodItemsByUser(currentUser.getUid())
+                .removeEventListener(statsListener);
         }
     }
 } 
