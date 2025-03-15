@@ -55,6 +55,16 @@
         android:layout_marginBottom="32dp"/>
 
     <TextView
+        android:id="@+id/forgotPasswordPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Forgot Password?"
+        android:textColor="@color/design_default_color_primary"
+        android:layout_gravity="center"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
         android:id="@+id/signupPrompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
