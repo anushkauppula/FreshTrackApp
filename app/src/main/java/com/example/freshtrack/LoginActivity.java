@@ -3,9 +3,11 @@ package com.example.freshtrack;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +38,19 @@ public class LoginActivity extends AppCompatActivity {
         loginPassword = findViewById(R.id.loginPassword);
         loginButton = findViewById(R.id.loginButton);
         signupPrompt = findViewById(R.id.signupPrompt);
+
+        // Initialize password toggle
+        ImageButton togglePassword = findViewById(R.id.toggleLoginPasswordVisibility);
+        togglePassword.setOnClickListener(v -> {
+            if (loginPassword.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                loginPassword.setTransformationMethod(null);
+                togglePassword.setImageResource(R.drawable.ic_visibility);
+            } else {
+                loginPassword.setTransformationMethod(new PasswordTransformationMethod());
+                togglePassword.setImageResource(R.drawable.ic_visibility_off);
+            }
+            loginPassword.setSelection(loginPassword.length());
+        });
 
         loginButton.setOnClickListener(v -> attemptLogin());
         signupPrompt.setOnClickListener(v -> {
