@@ -21,13 +21,16 @@ public class FoodItem {
     private int quantity;
     private String unit;
     private String notes;
+    private String weight;
+    private String count;
 
     // Empty constructor required for Firestore
     public FoodItem() {
     }
 
     public FoodItem(String name, long dateAdded, long expiryDate, String userId, 
-                   String category, int quantity, String unit, String notes) {
+                   String category, int quantity, String unit, String notes, 
+                   String weight, String count) {
         this.name = name;
         this.dateAdded = dateAdded;
         this.expiryDate = expiryDate;
@@ -36,47 +39,8 @@ public class FoodItem {
         this.quantity = quantity;
         this.unit = unit;
         this.notes = notes;
-    }
-
-    // Calculate status based on expiry date
-    public int calculateStatus() {
-        long currentTime = System.currentTimeMillis();
-        long diffInMillies = expiryDate - currentTime;
-        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-        
-        if (diffInDays < 0) {
-            return STATUS_EXPIRED;
-        } else if (diffInDays <= 1) { // Today or tomorrow
-            return STATUS_EXPIRING_SOON;
-        } else {
-            return STATUS_FRESH;
-        }
-    }
-
-    public String getStatusText() {
-        switch (calculateStatus()) {
-            case STATUS_EXPIRED:
-                return "Expired";
-            case STATUS_EXPIRING_SOON:
-                return "Expiring Soon";
-            case STATUS_FRESH:
-                return "Fresh";
-            default:
-                return "Unknown";
-        }
-    }
-
-    public int getStatusColor() {
-        switch (calculateStatus()) {
-            case STATUS_EXPIRED:
-                return Color.RED; // Use same red as delete background
-            case STATUS_EXPIRING_SOON:
-                return Color.parseColor("#FFA500"); // Orange
-            case STATUS_FRESH:
-                return Color.GREEN;
-            default:
-                return Color.GRAY;
-        }
+        this.weight = weight;
+        this.count = count;
     }
 
     // Getters and setters
@@ -150,5 +114,21 @@ public class FoodItem {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getWeight() {
+        return weight;
+    }
+
+    public void setWeight(String weight) {
+        this.weight = weight;
+    }
+
+    public String getCount() {
+        return count;
+    }
+
+    public void setCount(String count) {
+        this.count = count;
     }
 } 
