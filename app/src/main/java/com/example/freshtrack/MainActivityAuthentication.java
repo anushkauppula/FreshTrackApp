@@ -3,9 +3,11 @@ package com.example.freshtrack;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,6 +44,19 @@ public class MainActivityAuthentication extends AppCompatActivity {
         lastNameEditText = findViewById(R.id.lastNameEditText);
         usernameEditText = findViewById(R.id.usernameEditText);
         signUpButton = findViewById(R.id.signUpButton);
+
+        // Initialize password toggle
+        ImageButton togglePassword = findViewById(R.id.togglePasswordVisibility);
+        togglePassword.setOnClickListener(v -> {
+            if (passwordEditText.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                passwordEditText.setTransformationMethod(null);
+                togglePassword.setImageResource(R.drawable.ic_visibility);
+            } else {
+                passwordEditText.setTransformationMethod(new PasswordTransformationMethod());
+                togglePassword.setImageResource(R.drawable.ic_visibility_off);
+            }
+            passwordEditText.setSelection(passwordEditText.length());
+        });
 
         // Set up click listener for signup
         signUpButton.setOnClickListener(v -> createAccount());

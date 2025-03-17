@@ -3,9 +3,11 @@ package com.example.freshtrack;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText loginPassword;
     private Button loginButton;
     private TextView signupPrompt;
+    private TextView forgotPasswordPrompt;
     private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
 
@@ -36,11 +39,47 @@ public class LoginActivity extends AppCompatActivity {
         loginPassword = findViewById(R.id.loginPassword);
         loginButton = findViewById(R.id.loginButton);
         signupPrompt = findViewById(R.id.signupPrompt);
+        forgotPasswordPrompt = findViewById(R.id.forgotPasswordPrompt);
+
+        // Initialize password toggle
+        ImageButton togglePassword = findViewById(R.id.toggleLoginPasswordVisibility);
+        togglePassword.setOnClickListener(v -> {
+            if (loginPassword.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                loginPassword.setTransformationMethod(null);
+                togglePassword.setImageResource(R.drawable.ic_visibility);
+            } else {
+                loginPassword.setTransformationMethod(new PasswordTransformationMethod());
+                togglePassword.setImageResource(R.drawable.ic_visibility_off);
+            }
+            loginPassword.setSelection(loginPassword.length());
+        });
 
         loginButton.setOnClickListener(v -> attemptLogin());
         signupPrompt.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, MainActivityAuthentication.class);
             startActivity(intent);
+        });
+        
+        // Add forgot password click listener
+        forgotPasswordPrompt.setOnClickListener(v -> {
+            String email = loginIdentifier.getText().toString().trim();
+            if (TextUtils.isEmpty(email)) {
+                loginIdentifier.setError("Enter email to reset password");
+                return;
+            }
+            
+            mAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this, 
+                            "Password reset link sent to your email", 
+                            Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(LoginActivity.this, 
+                            "Failed to send reset email: " + task.getException().getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
         });
     }
 
