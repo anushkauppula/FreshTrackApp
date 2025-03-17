@@ -1,0 +1,12 @@
+<resources>
+    <string-array name="food_categories">
+        <item>General</item>
+        <item>Fruits</item>
+        <item>Vegetables</item>
+        <item>Dairy</item>
+        <item>Meat</item>
+        <item>Grains</item>
+        <item>Snacks</item>
+        <item>Beverages</item>
+    </string-array>
+</resources> 

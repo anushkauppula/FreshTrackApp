@@ -67,9 +67,10 @@
         android:layout_marginTop="10dp"
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp"
-        app:passwordToggleEnabled="true">
+        app:passwordToggleEnabled="true"
+        app:endIconMode="password_toggle">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/signuppassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
