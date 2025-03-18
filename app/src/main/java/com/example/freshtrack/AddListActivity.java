@@ -319,6 +319,10 @@ public class AddListActivity extends AppCompatActivity {
                     );
                 }
                 Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
+                // Navigate to home page
+                Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
                 finish();
             })
             .addOnFailureListener(e -> {
