@@ -14,19 +14,20 @@ import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
-
-import com.example.freshtrack.adapters.FoodItemAdapter;
-import com.example.freshtrack.models.FoodItem;
+import java.util.ArrayList;
+import java.util.List;
+import android.util.Log;
+import java.util.Calendar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import java.util.ArrayList;
-import java.util.List;
-import android.util.Log;
+import com.example.freshtrack.adapters.FoodItemAdapter;
+import com.example.freshtrack.models.FoodItem;
 
 public class MainActivityHome extends AppCompatActivity {
+    private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
     private RecyclerView recyclerView;
     private FoodItemAdapter adapter;
@@ -34,20 +35,42 @@ public class MainActivityHome extends AppCompatActivity {
     private EditText searchBox;
     private static final String PREFS_NAME = "LayoutPrefs";
     private static final String KEY_LAYOUT = "layout_type";
+    private String currentFilter = "all";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_home);
 
-        // Set up toolbar
+        // Get filter from intent
+        currentFilter = getIntent().getStringExtra("FILTER");
+        if (currentFilter == null) currentFilter = "all";
+
+        // Set up toolbar with appropriate title
+        String title;
+        switch (currentFilter) {
+            case "fresh":
+                title = "Fresh Items";
+                break;
+            case "expiring_soon":
+                title = "Expiring Soon";
+                break;
+            case "expired":
+                title = "Expired Items";
+                break;
+            default:
+                title = "All Items";
+                break;
+        }
+
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Fresh Track");
+            getSupportActionBar().setTitle(title);
         }
 
-        // Initialize Firebase
+        // Initialize Firebase components
+        mAuth = FirebaseAuth.getInstance();
         firebaseModel = new FirebaseModel();
 
         // Initialize RecyclerView
@@ -105,30 +128,71 @@ public class MainActivityHome extends AppCompatActivity {
     }
 
     private void loadFoodItems() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
-            
-            firebaseModel.getFoodItemsByUser(userId)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        foodItems.clear();
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            FoodItem item = snapshot.getValue(FoodItem.class);
-                            if (item != null) {
-                                foodItems.add(item);
-                            }
-                        }
-                        adapter.updateItems(foodItems);
-                    }
+        String userId = mAuth.getCurrentUser().getUid();
+        firebaseModel.getFoodItemsByUser(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                foodItems.clear();
+                Calendar today = Calendar.getInstance();
+                today.set(Calendar.HOUR_OF_DAY, 0);
+                today.set(Calendar.MINUTE, 0);
+                today.set(Calendar.SECOND, 0);
+                today.set(Calendar.MILLISECOND, 0);
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e("MainActivityHome", "Error loading items: " + error.getMessage());
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    FoodItem item = snapshot.getValue(FoodItem.class);
+                    if (item != null) {
+                        Calendar expiryCalendar = Calendar.getInstance();
+                        expiryCalendar.setTimeInMillis(item.getExpiryDate());
+                        expiryCalendar.set(Calendar.HOUR_OF_DAY, 0);
+                        expiryCalendar.set(Calendar.MINUTE, 0);
+                        expiryCalendar.set(Calendar.SECOND, 0);
+                        expiryCalendar.set(Calendar.MILLISECOND, 0);
+
+                        long daysUntilExpiry = (expiryCalendar.getTimeInMillis() - today.getTimeInMillis()) 
+                            / (24 * 60 * 60 * 1000);
+
+                        boolean shouldAdd = false;
+                        switch (currentFilter) {
+                            case "fresh":
+                                shouldAdd = daysUntilExpiry > 2;
+                                break;
+                            case "expiring_soon":
+                                shouldAdd = daysUntilExpiry >= 0 && daysUntilExpiry <= 2;
+                                break;
+                            case "expired":
+                                shouldAdd = daysUntilExpiry < 0;
+                                break;
+                            default: // "all"
+                                shouldAdd = true;
+                                break;
+                        }
+
+                        if (shouldAdd) {
+                            foodItems.add(item);
+                        }
                     }
-                });
-        }
+                }
+
+                adapter.updateItems(foodItems);
+                
+                // Show message if no items found
+                TextView noItemsText = findViewById(R.id.noItemsText);
+                if (noItemsText != null) {
+                    if (foodItems.isEmpty()) {
+                        noItemsText.setVisibility(View.VISIBLE);
+                        noItemsText.setText("No " + currentFilter.replace("_", " ") + " items found");
+                    } else {
+                        noItemsText.setVisibility(View.GONE);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e("MainActivityHome", "Error loading food items", error.toException());
+            }
+        });
     }
 
     private void setLayoutManager() {

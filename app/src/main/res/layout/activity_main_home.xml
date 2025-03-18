@@ -76,4 +76,14 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"/>
 
+    <TextView
+        android:id="@+id/noItemsText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:visibility="gone"
+        android:text="No items found"/>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
