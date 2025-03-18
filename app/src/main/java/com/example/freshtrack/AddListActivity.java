@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import com.example.freshtrack.models.FoodItem;
+import com.example.freshtrack.notifications.NotificationHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.mlkit.vision.common.InputImage;
@@ -306,6 +307,17 @@ public class AddListActivity extends AppCompatActivity {
         firebaseModel.addFoodItem(foodItem)
             .addOnSuccessListener(aVoid -> {
                 Log.d("AddListActivity", "Food item saved successfully");
+                // Schedule notification for the new item
+                String notificationId = firebaseModel.getNewNotificationId();
+                if (notificationId != null) {
+                    NotificationHelper notificationHelper = new NotificationHelper(this);
+                    notificationHelper.scheduleNotification(
+                        userId,
+                        foodName,
+                        notificationId,
+                        expiryTimestamp
+                    );
+                }
                 Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
                 finish();
             })

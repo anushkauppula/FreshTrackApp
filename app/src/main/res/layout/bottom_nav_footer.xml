@@ -14,7 +14,9 @@
         android:layout_height="72dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:background="?attr/colorSurface"
+        android:elevation="8dp">
 
         <LinearLayout
             android:id="@+id/btnHome"
@@ -30,13 +32,13 @@
             <ImageView
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:src="@drawable/home"
+                android:src="@drawable/dashboard"
                 app:tint="@color/primary_color"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Home"
+                android:text="Dashboard"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/primary_color"/>
@@ -63,6 +65,32 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Add"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/primary_color"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnNotifications"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_notifications"
+                app:tint="@color/primary_color"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notifications"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/primary_color"/>

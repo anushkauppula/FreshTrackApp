@@ -2,6 +2,7 @@ package com.example.freshtrack;
 
 import com.example.freshtrack.models.FoodItem;
 import com.example.freshtrack.models.User;
+import com.example.freshtrack.models.UserNotification;
 import com.example.freshtrack.models.UserSettings;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -21,6 +22,9 @@ public class FirebaseModel {
     private static final String USERS_PATH = "users";
     private static final String USER_SETTINGS_PATH = "user_settings";
     private FirebaseFirestore db;
+    private final FirebaseDatabase database;
+    private final DatabaseReference foodItemsRef;
+    private final DatabaseReference notificationsRef;
 
     public FirebaseModel() {
         // Initialize database reference outside try-catch
@@ -31,6 +35,10 @@ public class FirebaseModel {
         } catch (Exception e) {
             Log.e("FirebaseModel", "Error initializing Firestore: " + e.getMessage());
         }
+
+        database = FirebaseDatabase.getInstance();
+        foodItemsRef = database.getReference("food_items");
+        notificationsRef = database.getReference("user_notifications");
     }
 
     // User operations
@@ -166,5 +174,21 @@ public class FirebaseModel {
             .child(userId)
             .child("showDeleteConfirmation")
             .setValue(showConfirmation);
+    }
+
+    public String getNewNotificationId() {
+        return notificationsRef.push().getKey();
+    }
+
+    public Task<Void> addNotification(UserNotification notification) {
+        return notificationsRef.child(notification.getId()).setValue(notification);
+    }
+
+    public Query getNotificationsByUser(String userId) {
+        return notificationsRef.orderByChild("userId").equalTo(userId);
+    }
+
+    public Task<Void> markNotificationAsRead(String notificationId) {
+        return notificationsRef.child(notificationId).child("read").setValue(true);
     }
 }
