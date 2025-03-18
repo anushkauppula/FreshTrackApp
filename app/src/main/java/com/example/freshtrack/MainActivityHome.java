@@ -25,12 +25,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.example.freshtrack.adapters.FoodItemAdapter;
 import com.example.freshtrack.models.FoodItem;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import com.example.freshtrack.utils.SwipeToDeleteCallback;
 
 public class MainActivityHome extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
     private RecyclerView recyclerView;
-    private FoodItemAdapter adapter;
+    public FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
     private EditText searchBox;
     private static final String PREFS_NAME = "LayoutPrefs";
@@ -74,13 +76,7 @@ public class MainActivityHome extends AppCompatActivity {
         firebaseModel = new FirebaseModel();
 
         // Initialize RecyclerView
-        recyclerView = findViewById(R.id.recyclerView);
-        foodItems = new ArrayList<>();
-        adapter = new FoodItemAdapter(foodItems);
-        
-        // Set layout based on user preference
-        setLayoutManager();
-        recyclerView.setAdapter(adapter);
+        initializeRecyclerView();
 
         // Initialize search functionality
         searchBox = findViewById(R.id.searchBox);
@@ -235,5 +231,21 @@ public class MainActivityHome extends AppCompatActivity {
         super.onResume();
         // Check if layout preference has changed
         setLayoutManager();
+    }
+
+    private void initializeRecyclerView() {
+        recyclerView = findViewById(R.id.recyclerView);
+        foodItems = new ArrayList<>();
+        adapter = new FoodItemAdapter(foodItems);
+        
+        // Set layout based on user preference
+        setLayoutManager();
+        recyclerView.setAdapter(adapter);
+        
+        // Add swipe to delete functionality
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+            new SwipeToDeleteCallback(adapter, this)
+        );
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 }
