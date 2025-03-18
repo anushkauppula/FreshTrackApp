@@ -22,13 +22,30 @@
         android:inputType="textEmailAddress"
         android:layout_marginBottom="16dp"/>
 
-    <EditText
-        android:id="@+id/loginPassword"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="24dp">
+
+        <EditText
+            android:id="@+id/loginPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:paddingEnd="40dp"/>
+
+        <ImageButton
+            android:id="@+id/toggleLoginPasswordVisibility"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:src="@drawable/ic_visibility_off"
+            android:contentDescription="Toggle password visibility"/>
+
+    </RelativeLayout>
 
     <Button
         android:id="@+id/loginButton"
@@ -36,6 +53,16 @@
         android:layout_height="wrap_content"
         android:text="Login"
         android:layout_marginBottom="32dp"/>
+
+    <TextView
+        android:id="@+id/forgotPasswordPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Forgot Password?"
+        android:textColor="@color/design_default_color_primary"
+        android:layout_gravity="center"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/signupPrompt"

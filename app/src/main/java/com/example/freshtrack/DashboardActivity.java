@@ -87,24 +87,27 @@ public class DashboardActivity extends AppCompatActivity {
 
         viewAllCard.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
+            intent.putExtra("FILTER", "all");
             startActivity(intent);
         });
 
-        View.OnClickListener statisticsClickListener = v -> {
+        totalItemsCard.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
-            String filter = "";
-            if (v.getId() == R.id.expiringSoonCard) {
-                filter = "expiring_soon";
-            } else if (v.getId() == R.id.expiredCard) {
-                filter = "expired";
-            }
-            intent.putExtra("FILTER", filter);
+            intent.putExtra("FILTER", "fresh");
             startActivity(intent);
-        };
+        });
 
-        expiringSoonCard.setOnClickListener(statisticsClickListener);
-        expiredCard.setOnClickListener(statisticsClickListener);
-        totalItemsCard.setOnClickListener(statisticsClickListener);
+        expiringSoonCard.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
+            intent.putExtra("FILTER", "expiring_soon");
+            startActivity(intent);
+        });
+
+        expiredCard.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
+            intent.putExtra("FILTER", "expired");
+            startActivity(intent);
+        });
     }
 
     private void loadUserData() {

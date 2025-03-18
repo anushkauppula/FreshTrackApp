@@ -27,13 +27,30 @@
             android:inputType="textEmailAddress"
             android:layout_marginBottom="16dp"/>
 
-        <EditText
-            android:id="@+id/passwordEditText"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password (min 6 characters)"
-            android:inputType="textPassword"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/passwordEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password (min 6 characters)"
+                android:inputType="textPassword"
+                android:paddingEnd="40dp"/>
+
+            <ImageButton
+                android:id="@+id/togglePasswordVisibility"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?android:attr/selectableItemBackground"
+                android:src="@drawable/ic_visibility_off"
+                android:contentDescription="Toggle password visibility"/>
+
+        </RelativeLayout>
 
         <EditText
             android:id="@+id/firstNameEditText"
