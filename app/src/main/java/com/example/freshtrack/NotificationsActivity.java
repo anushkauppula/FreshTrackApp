@@ -95,29 +95,41 @@ public class NotificationsActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnDashboard = bottomNav.findViewById(R.id.btnDashboard);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
         View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(NotificationsActivity.this, MainActivityHome.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        btnDashboard.setOnClickListener(v -> {
             Intent intent = new Intent(NotificationsActivity.this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
         btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(NotificationsActivity.this, AddListActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
         btnNotifications.setOnClickListener(v -> {
-            // Already on notifications page
+            // Already on Notifications, do nothing
         });
 
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(NotificationsActivity.this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
     }
 } 

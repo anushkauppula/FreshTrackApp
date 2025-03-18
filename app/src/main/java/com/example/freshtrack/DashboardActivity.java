@@ -213,28 +213,41 @@ public class DashboardActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnDashboard = bottomNav.findViewById(R.id.btnDashboard);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
         View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
-            // Already on home, do nothing or refresh
-            recreate();
+            Intent intent = new Intent(DashboardActivity.this, MainActivityHome.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        btnDashboard.setOnClickListener(v -> {
+            // Already on Dashboard, do nothing
         });
 
         btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, AddListActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
 
         btnNotifications.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, NotificationsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
 
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
     }
 

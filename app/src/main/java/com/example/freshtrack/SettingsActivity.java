@@ -120,22 +120,41 @@ public class SettingsActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnDashboard = bottomNav.findViewById(R.id.btnDashboard);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(SettingsActivity.this, MainActivityHome.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        btnDashboard.setOnClickListener(v -> {
             Intent intent = new Intent(SettingsActivity.this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
         btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(SettingsActivity.this, AddListActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
+        });
+
+        btnNotifications.setOnClickListener(v -> {
+            Intent intent = new Intent(SettingsActivity.this, NotificationsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
         });
 
         btnSettings.setOnClickListener(v -> {
-            // Already in settings, do nothing
+            // Already on Settings, do nothing
         });
     }
 
