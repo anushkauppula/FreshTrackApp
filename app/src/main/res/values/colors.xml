@@ -133,4 +133,7 @@
     <color name="fresh_green">#4CAF50</color>
     <color name="expiring_soon_orange">#FF9800</color>
     <color name="expired_red">#F44336</color>
+
+    <color name="logo_primary">#119872</color>
+    <color name="logo_background">#FAE8D6</color>
 </resources>

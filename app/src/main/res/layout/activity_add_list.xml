@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/logo_primary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:title="Add Item"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
@@ -80,6 +80,7 @@
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/logo_primary"
             android:text="Save"/>
 
         <Button
