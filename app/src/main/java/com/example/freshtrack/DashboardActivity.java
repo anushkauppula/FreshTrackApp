@@ -214,6 +214,7 @@ public class DashboardActivity extends AppCompatActivity {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
@@ -223,6 +224,11 @@ public class DashboardActivity extends AppCompatActivity {
 
         btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(DashboardActivity.this, AddListActivity.class);
+            startActivity(intent);
+        });
+
+        btnNotifications.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, NotificationsActivity.class);
             startActivity(intent);
         });
 

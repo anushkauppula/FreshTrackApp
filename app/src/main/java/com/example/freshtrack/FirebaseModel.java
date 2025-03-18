@@ -2,6 +2,7 @@ package com.example.freshtrack;
 
 import com.example.freshtrack.models.FoodItem;
 import com.example.freshtrack.models.User;
+import com.example.freshtrack.models.UserNotification;
 import com.example.freshtrack.models.UserSettings;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -20,7 +21,11 @@ public class FirebaseModel {
     private static final String FOOD_ITEMS_PATH = "food_items";
     private static final String USERS_PATH = "users";
     private static final String USER_SETTINGS_PATH = "user_settings";
+    private static final String NOTIFICATIONS_PATH = "user_notifications";
     private FirebaseFirestore db;
+    private final FirebaseDatabase database;
+    private final DatabaseReference foodItemsRef;
+    private final DatabaseReference notificationsRef;
 
     public FirebaseModel() {
         // Initialize database reference outside try-catch
@@ -31,6 +36,10 @@ public class FirebaseModel {
         } catch (Exception e) {
             Log.e("FirebaseModel", "Error initializing Firestore: " + e.getMessage());
         }
+
+        database = FirebaseDatabase.getInstance();
+        foodItemsRef = database.getReference("food_items");
+        notificationsRef = database.getReference(NOTIFICATIONS_PATH);
     }
 
     // User operations
@@ -166,5 +175,44 @@ public class FirebaseModel {
             .child(userId)
             .child("showDeleteConfirmation")
             .setValue(showConfirmation);
+    }
+
+    public String getNewNotificationId() {
+        return notificationsRef.push().getKey();
+    }
+
+    public Task<Void> addNotification(UserNotification notification) {
+        Log.d("FirebaseModel", "Adding notification: " + notification.toString());
+        // Create a new unique key for the notification if one isn't provided
+        String notificationKey = notification.getId() != null ? 
+            notification.getId() : 
+            notificationsRef.push().getKey();
+        
+        if (notificationKey == null) {
+            Log.e("FirebaseModel", "Failed to generate notification key");
+            return Tasks.forException(new Exception("Failed to generate notification key"));
+        }
+        
+        notification.setId(notificationKey);
+        Log.d("FirebaseModel", "Saving notification with ID: " + notificationKey);
+        Log.d("FirebaseModel", "Notification path: " + NOTIFICATIONS_PATH + "/" + notificationKey);
+
+        return notificationsRef.child(notificationKey).setValue(notification)
+            .addOnSuccessListener(aVoid -> {
+                Log.d("FirebaseModel", "Successfully saved notification to database");
+            })
+            .addOnFailureListener(e -> {
+                Log.e("FirebaseModel", "Failed to save notification: " + e.getMessage());
+            });
+    }
+
+    public Query getNotificationsByUser(String userId) {
+        Log.d("FirebaseModel", "Getting notifications for user: " + userId);
+        Log.d("FirebaseModel", "Query path: " + NOTIFICATIONS_PATH + " orderByChild(userId)");
+        return notificationsRef.orderByChild("userId").equalTo(userId);
+    }
+
+    public Task<Void> markNotificationAsRead(String notificationId) {
+        return notificationsRef.child(notificationId).child("read").setValue(true);
     }
 }
