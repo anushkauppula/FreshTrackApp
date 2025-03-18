@@ -2,43 +2,79 @@ package com.example.freshtrack;
 
 import android.app.Application;
 import android.util.Log;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-import com.example.freshtrack.notifications.ExpiryCheckWorker;
+import androidx.work.*;
+import androidx.core.content.ContextCompat;
+import com.example.freshtrack.notifications.DailyNotificationWorker;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.concurrent.TimeUnit;
 import java.util.Calendar;
+import java.util.List;
+import com.google.common.util.concurrent.ListenableFuture;
 
 public class FreshTrackApplication extends Application {
+    private static final String TAG = "FreshTrackApplication";
+
     @Override
     public void onCreate() {
         super.onCreate();
         try {
-            scheduleExpiryCheck();
+            scheduleDailyNotifications();
         } catch (Exception e) {
-            Log.e("FreshTrackApp", "Failed to schedule expiry check: " + e.getMessage());
+            Log.e(TAG, "Failed to schedule daily notifications: " + e.getMessage());
         }
     }
 
-    private void scheduleExpiryCheck() {
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            return; // Don't schedule if user is not logged in
-        }
-
+    private void scheduleDailyNotifications() {
+        // Set up work constraints
         Constraints constraints = new Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build();
 
-        // Cancel any existing work
-        WorkManager.getInstance(this).cancelAllWork();
+        // Schedule daily notification check at 9:46 PM
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 4); // 4 AM
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
         
-        // Schedule immediate work
-        WorkManager.getInstance(this).enqueue(
-            new OneTimeWorkRequest.Builder(ExpiryCheckWorker.class)
+        // If the time has already passed today, schedule for tomorrow
+        if (calendar.before(Calendar.getInstance())) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        
+        long initialDelay = calendar.getTimeInMillis() - System.currentTimeMillis();
+        Log.d(TAG, "Scheduling daily notifications with initial delay: " + initialDelay + "ms");
+        
+        PeriodicWorkRequest dailyCheckRequest =
+            new PeriodicWorkRequest.Builder(DailyNotificationWorker.class, 24, TimeUnit.HOURS)
                 .setConstraints(constraints)
-                .build()
-        );
+                .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+                .addTag("daily_notification_check")
+                .build();
+
+        // Replace any existing work with the new schedule
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "DailyNotificationCheck",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                dailyCheckRequest
+            );
+
+        Log.d(TAG, "Daily notification check scheduled successfully");
+
+        // For debugging: Get work info
+        WorkManager.getInstance(this)
+            .getWorkInfosByTag("daily_notification_check")
+            .addListener(() -> {
+                try {
+                    ListenableFuture<List<WorkInfo>> workInfosFuture = 
+                        WorkManager.getInstance(this).getWorkInfosByTag("daily_notification_check");
+                    List<WorkInfo> workInfos = workInfosFuture.get();
+                    if (workInfos != null && !workInfos.isEmpty()) {
+                        Log.d(TAG, "Work status: " + workInfos.get(0).getState());
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error checking work status: " + e.getMessage());
+                }
+            }, ContextCompat.getMainExecutor(this));
     }
 } 

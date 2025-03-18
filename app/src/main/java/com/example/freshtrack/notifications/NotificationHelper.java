@@ -95,7 +95,7 @@ public class NotificationHelper {
         // If not expiring today, schedule for the morning of expiry day
         Calendar notificationTime = Calendar.getInstance();
         notificationTime.setTimeInMillis(expiryTime);
-        notificationTime.set(Calendar.HOUR_OF_DAY, 9); // 9 AM
+        notificationTime.set(Calendar.HOUR_OF_DAY, 4); // 4 AM
         notificationTime.set(Calendar.MINUTE, 0);
         notificationTime.set(Calendar.SECOND, 0);
 
