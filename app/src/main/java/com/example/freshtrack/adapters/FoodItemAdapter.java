@@ -144,6 +144,46 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
         notifyDataSetChanged();
     }
 
+    public List<FoodItem> getFoodItems() {
+        return foodItems;
+    }
+
+    // Add public method to handle deletion from outside
+    public void handleSwipeDeletion(int position) {
+        if (position != RecyclerView.NO_POSITION && position < foodItems.size()) {
+            FoodItem item = foodItems.get(position);
+            showDeleteConfirmationDialog(item, context, position);
+        }
+    }
+
+    private void showDeleteConfirmationDialog(FoodItem item, Context context, int swipedPosition) {
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null);
+        CheckBox checkBox = dialogView.findViewById(R.id.checkboxDontShowAgain);
+        TextView messageText = dialogView.findViewById(R.id.dialogMessage);
+        messageText.setText("Are you sure you want to delete " + item.getName() + "?");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                .setTitle("Delete Item")
+                .setView(dialogView)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    if (checkBox.isChecked()) {
+                        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                        preferences.edit().putBoolean(KEY_DONT_SHOW_AGAIN, true).apply();
+                    }
+                    new FoodItemViewHolder(
+                        LayoutInflater.from(context).inflate(R.layout.item_food, null)
+                    ).deleteItem(item, context);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    // If this was triggered by a swipe, restore the view
+                    if (swipedPosition != -1) {
+                        notifyItemChanged(swipedPosition);
+                    }
+                });
+
+        builder.create().show();
+    }
+
     class FoodItemViewHolder extends RecyclerView.ViewHolder {
         private TextView tvFoodName;
         private TextView tvExpiryDate;
@@ -166,32 +206,32 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
-                    handleItemDeletion(foodItems.get(position));
+                    handleItemDeletion(foodItems.get(position), context);
                 }
             });
         }
 
-        private void handleItemDeletion(FoodItem item) {
+        void handleItemDeletion(FoodItem item, Context context) {
             SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             boolean dontShowDialog = preferences.getBoolean(KEY_DONT_SHOW_AGAIN, false);
 
             if (dontShowDialog) {
                 // If user chose to not show dialog, delete directly
-                deleteItem(item);
+                deleteItem(item, context);
             } else {
-                showDeleteConfirmationDialog(item);
+                showDeleteConfirmationDialog(item, context, -1);
             }
         }
 
-        private void deleteItem(FoodItem item) {
+        private void deleteItem(FoodItem item, Context context) {
             // Store the item temporarily for undo
             String itemName = item.getName();
             String itemId = item.getId();
-            String userId = item.getUserId(); // Get the user ID from the item
+            String userId = item.getUserId();
 
             // Remove the item from the list temporarily
             foodItemsFiltered.remove(item);
-            notifyDataSetChanged(); // Update the UI immediately
+            notifyDataSetChanged();
 
             // Show Snackbar for undo
             Snackbar snackbar = Snackbar.make(((MainActivityHome) context).findViewById(R.id.bottomNav),
@@ -200,21 +240,18 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
                         // Restore the item
                         foodItemsFiltered.add(item);
                         notifyItemInserted(foodItemsFiltered.size() - 1);
-                        firebaseModel.addFoodItem(item); // Re-add to Firebase
+                        firebaseModel.addFoodItem(item);
                     });
 
-            // Customize Snackbar layout
             snackbar.setActionTextColor(context.getResources().getColor(android.R.color.holo_blue_light));
             snackbar.setAnchorView(((MainActivityHome) context).findViewById(R.id.bottomNav));
             snackbar.show();
 
-            // Delete the item from Firebase after a delay if not undone
             snackbar.addCallback(new Snackbar.Callback() {
                 @Override
                 public void onDismissed(Snackbar transientBottomBar, int event) {
                     if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
-                        // If the Snackbar was dismissed without clicking "UNDO", delete the item
-                        firebaseModel.deleteFoodItem(userId, itemId) // Pass both userId and itemId
+                        firebaseModel.deleteFoodItem(userId, itemId)
                                 .addOnSuccessListener(aVoid -> {
                                     Toast.makeText(context, "Item deleted permanently", Toast.LENGTH_SHORT).show();
                                 })
@@ -225,30 +262,6 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
                     }
                 }
             });
-        }
-
-        private void showDeleteConfirmationDialog(FoodItem item) {
-            // Inflate custom layout for dialog
-            View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null);
-            CheckBox checkBox = dialogView.findViewById(R.id.checkboxDontShowAgain);
-            TextView messageText = dialogView.findViewById(R.id.dialogMessage);
-            messageText.setText("Are you sure you want to delete " + item.getName() + "?");
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                    .setTitle("Delete Item")
-                    .setView(dialogView)
-                    .setPositiveButton("OK", (dialog, which) -> {
-                        // Save checkbox preference
-                        if (checkBox.isChecked()) {
-                            SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                            preferences.edit().putBoolean(KEY_DONT_SHOW_AGAIN, true).apply();
-                        }
-                        // Delete the item
-                        deleteItem(item);
-                    })
-                    .setNegativeButton("Cancel", null);
-
-            builder.create().show();
         }
     }
 }

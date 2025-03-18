@@ -25,12 +25,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.example.freshtrack.adapters.FoodItemAdapter;
 import com.example.freshtrack.models.FoodItem;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import com.example.freshtrack.utils.SwipeToDeleteCallback;
 
 public class MainActivityHome extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
     private RecyclerView recyclerView;
-    private FoodItemAdapter adapter;
+    public FoodItemAdapter adapter;
     private List<FoodItem> foodItems;
     private EditText searchBox;
     private static final String PREFS_NAME = "LayoutPrefs";
@@ -74,13 +76,7 @@ public class MainActivityHome extends AppCompatActivity {
         firebaseModel = new FirebaseModel();
 
         // Initialize RecyclerView
-        recyclerView = findViewById(R.id.recyclerView);
-        foodItems = new ArrayList<>();
-        adapter = new FoodItemAdapter(foodItems);
-        
-        // Set layout based on user preference
-        setLayoutManager();
-        recyclerView.setAdapter(adapter);
+        initializeRecyclerView();
 
         // Initialize search functionality
         searchBox = findViewById(R.id.searchBox);
@@ -107,23 +103,41 @@ public class MainActivityHome extends AppCompatActivity {
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnDashboard = bottomNav.findViewById(R.id.btnDashboard);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
+            // Already on Home, do nothing
+        });
+
+        btnDashboard.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivityHome.this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
         btnAdd.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivityHome.this, AddListActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
+        });
+
+        btnNotifications.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivityHome.this, NotificationsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
         });
 
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivityHome.this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
     }
 
@@ -217,5 +231,21 @@ public class MainActivityHome extends AppCompatActivity {
         super.onResume();
         // Check if layout preference has changed
         setLayoutManager();
+    }
+
+    private void initializeRecyclerView() {
+        recyclerView = findViewById(R.id.recyclerView);
+        foodItems = new ArrayList<>();
+        adapter = new FoodItemAdapter(foodItems);
+        
+        // Set layout based on user preference
+        setLayoutManager();
+        recyclerView.setAdapter(adapter);
+        
+        // Add swipe to delete functionality
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+            new SwipeToDeleteCallback(adapter, this)
+        );
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 }

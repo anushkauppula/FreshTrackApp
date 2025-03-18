@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import com.example.freshtrack.models.FoodItem;
+import com.example.freshtrack.notifications.NotificationHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.mlkit.vision.common.InputImage;
@@ -306,7 +307,22 @@ public class AddListActivity extends AppCompatActivity {
         firebaseModel.addFoodItem(foodItem)
             .addOnSuccessListener(aVoid -> {
                 Log.d("AddListActivity", "Food item saved successfully");
+                // Schedule notification for the new item
+                String notificationId = firebaseModel.getNewNotificationId();
+                if (notificationId != null) {
+                    NotificationHelper notificationHelper = new NotificationHelper(this);
+                    notificationHelper.scheduleNotification(
+                        userId,
+                        foodName,
+                        notificationId,
+                        expiryTimestamp
+                    );
+                }
                 Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
+                // Navigate to home page
+                Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
                 finish();
             })
             .addOnFailureListener(e -> {
@@ -319,22 +335,41 @@ public class AddListActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
+        View btnDashboard = bottomNav.findViewById(R.id.btnDashboard);
         View btnAdd = bottomNav.findViewById(R.id.btnAdd);
+        View btnNotifications = bottomNav.findViewById(R.id.btnNotifications);
         View btnSettings = bottomNav.findViewById(R.id.btnSettings);
 
         btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
+
+        btnDashboard.setOnClickListener(v -> {
             Intent intent = new Intent(AddListActivity.this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
         btnAdd.setOnClickListener(v -> {
-            // Already in Add page, do nothing or refresh
+            // Already on Add, do nothing
+        });
+
+        btnNotifications.setOnClickListener(v -> {
+            Intent intent = new Intent(AddListActivity.this, NotificationsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
         });
 
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(AddListActivity.this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         });
     }
 }
