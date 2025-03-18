@@ -5,7 +5,7 @@ public class UserNotification {
     private String userId;
     private String itemName;
     private long timestamp;
-    private boolean isRead;
+    private boolean read;
     private String type; // "EXPIRES_TODAY"
 
     public UserNotification() {
@@ -17,7 +17,7 @@ public class UserNotification {
         this.userId = userId;
         this.itemName = itemName;
         this.timestamp = timestamp;
-        this.isRead = false;
+        this.read = false;
         this.type = "EXPIRES_TODAY";
     }
 
@@ -34,9 +34,20 @@ public class UserNotification {
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
     
-    public boolean isRead() { return isRead; }
-    public void setRead(boolean read) { isRead = read; }
+    public boolean isRead() { return read; }
+    public void setRead(boolean read) { this.read = read; }
     
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    @Override
+    public String toString() {
+        return "UserNotification{" +
+                "id='" + id + '\'' +
+                ", userId='" + userId + '\'' +
+                ", itemName='" + itemName + '\'' +
+                ", timestamp=" + timestamp +
+                ", read=" + read +
+                '}';
+    }
 } 

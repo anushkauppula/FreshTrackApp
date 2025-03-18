@@ -49,27 +49,13 @@ public class NotificationReceiver extends BroadcastReceiver {
                         expiryCalendar.set(Calendar.MILLISECOND, 0);
 
                         if (expiryCalendar.getTimeInMillis() == today.getTimeInMillis()) {
-                            Log.d("NotificationReceiver", "Showing notification for item expiring today: " + itemName);
-                            // Show notification immediately
+                            Log.d("NotificationReceiver", "Item expiring today: " + itemName);
+                            
+                            // Let NotificationHelper handle both saving and showing
                             NotificationHelper notificationHelper = new NotificationHelper(context);
-                            notificationHelper.showNotification(itemName, notificationId);
-
-                            // Create notification in database
-                            UserNotification notification = new UserNotification(
-                                notificationId,
-                                userId,
-                                itemName,
-                                System.currentTimeMillis()
-                            );
-
-                            firebaseModel.addNotification(notification)
-                                .addOnSuccessListener(aVoid -> 
-                                    Log.d("NotificationReceiver", "Notification saved to database"))
-                                .addOnFailureListener(e -> {
-                                    Log.e("NotificationReceiver", "Failed to add notification: " + e.getMessage());
-                                });
+                            notificationHelper.scheduleNotification(userId, itemName, notificationId, item.getExpiryDate());
                         } else {
-                            Log.d("NotificationReceiver", "Item " + itemName + " does not expire today, skipping notification");
+                            Log.d("NotificationReceiver", "Item does not expire today, skipping notification");
                         }
                         break;
                     }

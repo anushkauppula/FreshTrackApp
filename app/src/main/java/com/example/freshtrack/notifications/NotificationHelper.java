@@ -12,15 +12,21 @@ import com.example.freshtrack.R;
 import com.example.freshtrack.NotificationsActivity;
 import java.util.Calendar;
 import android.util.Log;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseReference;
+import com.example.freshtrack.FirebaseModel;
+import com.example.freshtrack.models.UserNotification;
 
 public class NotificationHelper {
     private static final String CHANNEL_ID = "freshtrack_notifications";
     private final Context context;
     private final NotificationManager notificationManager;
+    private final FirebaseModel firebaseModel;
 
     public NotificationHelper(Context context) {
         this.context = context;
         this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        this.firebaseModel = new FirebaseModel();
         createNotificationChannel();
     }
 
@@ -65,7 +71,24 @@ public class NotificationHelper {
         // Only show notification if item expires today
         if (expiryCalendar.getTimeInMillis() == today.getTimeInMillis()) {
             Log.d("NotificationHelper", "Item " + itemName + " expires today, showing notification");
-            showNotification(itemName, notificationId);
+            // Create and save notification to database first
+            UserNotification notification = new UserNotification(
+                notificationId,
+                userId,
+                itemName,
+                System.currentTimeMillis()
+            );
+
+            firebaseModel.addNotification(notification)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("NotificationHelper", "Notification saved to database, showing notification");
+                    showNotification(itemName, notificationId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("NotificationHelper", "Failed to save notification: " + e.getMessage());
+                    // Show notification anyway even if save fails
+                    showNotification(itemName, notificationId);
+                });
             return;
         }
         
@@ -112,7 +135,7 @@ public class NotificationHelper {
         }
     }
 
-    public void showNotification(String itemName, String notificationId) {
+    private void showNotification(String itemName, String notificationId) {
         Log.d("NotificationHelper", "Building notification for: " + itemName);
         Intent intent = new Intent(context, NotificationsActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -2,6 +2,7 @@ package com.example.freshtrack;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,13 +10,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.freshtrack.adapters.NotificationAdapter;
-import com.example.freshtrack.models.FoodItem;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.example.freshtrack.models.UserNotification;
-import java.util.Calendar;
 
 public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView notificationsRecyclerView;
@@ -50,44 +51,39 @@ public class NotificationsActivity extends AppCompatActivity {
     private void loadNotifications() {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         
-        // Load items expiring today
-        firebaseModel.getFoodItemsByUser(userId).get().addOnSuccessListener(dataSnapshot -> {
-            List<UserNotification> notifications = new ArrayList<>();
-            Calendar today = Calendar.getInstance();
-            today.set(Calendar.HOUR_OF_DAY, 0);
-            today.set(Calendar.MINUTE, 0);
-            today.set(Calendar.SECOND, 0);
-            today.set(Calendar.MILLISECOND, 0);
+        // Load all notifications for this user
+        firebaseModel.getNotificationsByUser(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<UserNotification> notifications = new ArrayList<>();
 
-            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                FoodItem item = snapshot.getValue(FoodItem.class);
-                if (item != null) {
-                    Calendar expiryCalendar = Calendar.getInstance();
-                    expiryCalendar.setTimeInMillis(item.getExpiryDate());
-                    expiryCalendar.set(Calendar.HOUR_OF_DAY, 0);
-                    expiryCalendar.set(Calendar.MINUTE, 0);
-                    expiryCalendar.set(Calendar.SECOND, 0);
-                    expiryCalendar.set(Calendar.MILLISECOND, 0);
-
-                    if (expiryCalendar.getTimeInMillis() == today.getTimeInMillis()) {
-                        UserNotification notification = new UserNotification(
-                            item.getId(),
-                            userId,
-                            item.getName(),
-                            System.currentTimeMillis()
-                        );
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    UserNotification notification = snapshot.getValue(UserNotification.class);
+                    if (notification != null) {
                         notifications.add(notification);
                     }
                 }
+
+                // Sort notifications by timestamp (most recent first)
+                notifications.sort((n1, n2) -> Long.compare(n2.getTimestamp(), n1.getTimestamp()));
+
+                updateNotificationsUI(notifications);
             }
-            updateNotificationsUI(notifications);
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("NotificationsActivity", "Error loading notifications: " + databaseError.getMessage());
+                noNotificationsText.setVisibility(View.VISIBLE);
+                noNotificationsText.setText("Error loading notifications");
+                notificationsRecyclerView.setVisibility(View.GONE);
+            }
         });
     }
 
     private void updateNotificationsUI(List<UserNotification> notifications) {
         if (notifications.isEmpty()) {
             noNotificationsText.setVisibility(View.VISIBLE);
-            noNotificationsText.setText("No items expiring today");
+            noNotificationsText.setText("No notifications");
             notificationsRecyclerView.setVisibility(View.GONE);
         } else {
             noNotificationsText.setVisibility(View.GONE);

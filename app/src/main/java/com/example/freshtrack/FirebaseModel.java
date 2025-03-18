@@ -21,6 +21,7 @@ public class FirebaseModel {
     private static final String FOOD_ITEMS_PATH = "food_items";
     private static final String USERS_PATH = "users";
     private static final String USER_SETTINGS_PATH = "user_settings";
+    private static final String NOTIFICATIONS_PATH = "user_notifications";
     private FirebaseFirestore db;
     private final FirebaseDatabase database;
     private final DatabaseReference foodItemsRef;
@@ -38,7 +39,7 @@ public class FirebaseModel {
 
         database = FirebaseDatabase.getInstance();
         foodItemsRef = database.getReference("food_items");
-        notificationsRef = database.getReference("user_notifications");
+        notificationsRef = database.getReference(NOTIFICATIONS_PATH);
     }
 
     // User operations
@@ -181,10 +182,33 @@ public class FirebaseModel {
     }
 
     public Task<Void> addNotification(UserNotification notification) {
-        return notificationsRef.child(notification.getId()).setValue(notification);
+        Log.d("FirebaseModel", "Adding notification: " + notification.toString());
+        // Create a new unique key for the notification if one isn't provided
+        String notificationKey = notification.getId() != null ? 
+            notification.getId() : 
+            notificationsRef.push().getKey();
+        
+        if (notificationKey == null) {
+            Log.e("FirebaseModel", "Failed to generate notification key");
+            return Tasks.forException(new Exception("Failed to generate notification key"));
+        }
+        
+        notification.setId(notificationKey);
+        Log.d("FirebaseModel", "Saving notification with ID: " + notificationKey);
+        Log.d("FirebaseModel", "Notification path: " + NOTIFICATIONS_PATH + "/" + notificationKey);
+
+        return notificationsRef.child(notificationKey).setValue(notification)
+            .addOnSuccessListener(aVoid -> {
+                Log.d("FirebaseModel", "Successfully saved notification to database");
+            })
+            .addOnFailureListener(e -> {
+                Log.e("FirebaseModel", "Failed to save notification: " + e.getMessage());
+            });
     }
 
     public Query getNotificationsByUser(String userId) {
+        Log.d("FirebaseModel", "Getting notifications for user: " + userId);
+        Log.d("FirebaseModel", "Query path: " + NOTIFICATIONS_PATH + " orderByChild(userId)");
         return notificationsRef.orderByChild("userId").equalTo(userId);
     }
 

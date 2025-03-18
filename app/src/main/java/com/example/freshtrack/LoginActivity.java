@@ -41,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Test notification
         NotificationHelper notificationHelper = new NotificationHelper(this);
-        notificationHelper.showNotification("Test Item", "test_id");
+        //notificationHelper.showNotification("Test Item", "test_id");
 
         // Request notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
