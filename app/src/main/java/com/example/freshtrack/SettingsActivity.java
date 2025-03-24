@@ -4,15 +4,25 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.freshtrack.models.UserSettings;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+import java.util.Collections;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "LayoutPrefs";
@@ -20,6 +30,9 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String KEY_LAYOUT = "layout_type";
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
+    private FirebaseModel firebaseModel;
+    private Switch switchShowDeleteConfirmation;
+    private Switch switchNotificationsEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +41,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
+        firebaseModel = new FirebaseModel();
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -36,18 +50,47 @@ public class SettingsActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
-        //MaterialCardView accountSettingsCard = findViewById(R.id.accountSettingsCard);
+        // Initialize UI components
+        switchShowDeleteConfirmation = findViewById(R.id.switchShowDeleteConfirmation);
+        switchNotificationsEnabled = findViewById(R.id.switchNotificationsEnabled);
         MaterialCardView signOutCard = findViewById(R.id.signOutCard);
 
-//        accountSettingsCard.setOnClickListener(v -> {
-//            startActivity(new Intent(SettingsActivity.this, AccountSettingsActivity.class));
-//        });
-
-        signOutCard.setOnClickListener(v -> signOut());
+        // Load current user settings
+        loadUserSettings();
 
         // Setup click listeners
         findViewById(R.id.btnLayout).setOnClickListener(v -> showLayoutSelectionDialog());
         findViewById(R.id.btnTheme).setOnClickListener(v -> showThemeSelectionDialog());
+
+        // Listener for Show Delete Confirmation toggle
+        switchShowDeleteConfirmation.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            String userId = currentUser.getUid();
+            firebaseModel.updateUserSettings(userId, Collections.singletonMap("showDeleteConfirmation", isChecked))
+                .addOnSuccessListener(aVoid -> {
+                    if (isChecked) {
+                        // Show the delete confirmation dialog if the toggle is turned on
+                        showDeleteConfirmationDialog();
+                    }
+                    Toast.makeText(SettingsActivity.this, "Show Delete Confirmation updated", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("SettingsActivity", "Error updating Show Delete Confirmation: " + e.getMessage());
+                });
+        });
+
+        // Listener for Notifications Enabled toggle
+        switchNotificationsEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            String userId = currentUser.getUid();
+            firebaseModel.updateUserSettings(userId, Collections.singletonMap("notificationsEnabled", isChecked))
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(SettingsActivity.this, "Notifications Enabled updated", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("SettingsActivity", "Error updating Notifications Enabled: " + e.getMessage());
+                });
+        });
+
+        signOutCard.setOnClickListener(v -> signOut());
 
         setupBottomNavigation();
     }
@@ -117,6 +160,28 @@ public class SettingsActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void loadUserSettings() {
+        String userId = currentUser.getUid();
+        firebaseModel.getUserSettings(userId)
+            .addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        UserSettings settings = dataSnapshot.getValue(UserSettings.class);
+                        if (settings != null) {
+                            switchShowDeleteConfirmation.setChecked(settings.isShowDeleteConfirmation());
+                            switchNotificationsEnabled.setChecked(settings.isNotificationsEnabled());
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("SettingsActivity", "Error loading user settings: " + error.getMessage());
+                }
+            });
+    }
+
     private void setupBottomNavigation() {
         View bottomNav = findViewById(R.id.bottomNav);
         View btnHome = bottomNav.findViewById(R.id.btnHome);
@@ -170,5 +235,10 @@ public class SettingsActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    private void showDeleteConfirmationDialog() {
+        // Logic to show the delete confirmation dialog
+        // This can be similar to the one in FoodItemAdapter
     }
 }

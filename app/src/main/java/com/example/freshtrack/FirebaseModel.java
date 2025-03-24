@@ -135,10 +135,8 @@ public class FirebaseModel {
             .setValue(settings);
     }
 
-    public Task<DataSnapshot> getUserSettings(String userId) {
-        return databaseReference.child(USER_SETTINGS_PATH)
-            .child(userId)
-            .get();
+    public DatabaseReference getUserSettings(String userId) {
+        return databaseReference.child(USER_SETTINGS_PATH).child(userId);
     }
 
     public Task<Void> updateUserSettings(String userId, Map<String, Object> updates) {

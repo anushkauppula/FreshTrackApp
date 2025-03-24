@@ -1,20 +1,28 @@
 package com.example.freshtrack;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.example.freshtrack.models.User;
 import com.example.freshtrack.models.UserSettings;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivityAuthentication extends AppCompatActivity {
     private EditText emailEditText;
@@ -25,8 +33,11 @@ public class MainActivityAuthentication extends AppCompatActivity {
     private Button signUpButton;
     private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
+    private FirebaseUser currentUser;
 
     private static final String TAG = "Authentication";
+    private static final String PREFS_NAME = "UserPrefs";
+    private static final String KEY_LAYOUT = "layoutType";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +72,16 @@ public class MainActivityAuthentication extends AppCompatActivity {
         // Set up click listener for signup
         signUpButton.setOnClickListener(v -> createAccount());
 
-        // Add at the end of onCreate
+        // Initialize currentUser
+        currentUser = mAuth.getCurrentUser();
+
+        // Commenting out theme-related code
+        /*
         TextView loginPrompt = findViewById(R.id.loginPrompt);
         loginPrompt.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivityAuthentication.this, LoginActivity.class);
-            startActivity(intent);
+            showThemeSelectionDialog();
         });
+        */
     }
 
     @Override
@@ -178,5 +193,42 @@ public class MainActivityAuthentication extends AppCompatActivity {
         }
 
         return valid;
+    }
+
+    private void showLayoutSelectionDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_layout_selection, null);
+        RadioGroup layoutRadioGroup = dialogView.findViewById(R.id.layoutRadioGroup);
+
+        // Set current selection
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String currentLayout = prefs.getString(KEY_LAYOUT, "list");
+        if (currentLayout.equals("grid")) {
+            layoutRadioGroup.check(R.id.radioGrid);
+        } else {
+            layoutRadioGroup.check(R.id.radioList);
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select Layout")
+                .setView(dialogView)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    int selectedId = layoutRadioGroup.getCheckedRadioButtonId();
+                    String layout = selectedId == R.id.radioGrid ? "grid" : "list";
+
+                    // Update the layout type in the database
+                    String userId = currentUser.getUid();
+                    firebaseModel.updateLayoutType(userId, layout)
+                        .addOnSuccessListener(aVoid -> {
+                            // Save the layout preference in SharedPreferences
+                            prefs.edit().putString(KEY_LAYOUT, layout).apply();
+                            Toast.makeText(this, "Layout preference saved", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("SettingsActivity", "Error updating layout type: " + e.getMessage());
+                            Toast.makeText(this, "Error saving layout preference", Toast.LENGTH_SHORT).show();
+                        });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }
