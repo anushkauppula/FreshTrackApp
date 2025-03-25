@@ -1,5 +1,6 @@
 package com.example.freshtrack;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import com.example.freshtrack.models.FoodItem;
 import com.example.freshtrack.notifications.NotificationHelper;
@@ -34,6 +36,23 @@ import android.net.Uri;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import java.io.IOException;
+import java.io.File;
+import com.example.freshtrack.api.PredictionApi;
+import com.example.freshtrack.api.PredictionResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.MultipartBody;
+import java.util.Map;
+import java.util.HashMap;
+import android.os.Environment;
+import android.provider.MediaStore;
+import androidx.core.content.FileProvider;
+import androidx.core.app.ActivityCompat;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -48,6 +67,8 @@ public class AddListActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private TextRecognizer textRecognizer;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
+    private long selectedExpiryDate;
+    private Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,17 +110,7 @@ public class AddListActivity extends AppCompatActivity {
         textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
 
         // Initialize image picker launcher
-        imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Uri imageUri = result.getData().getData();
-                    if (imageUri != null) {
-                        processImage(imageUri);
-                    }
-                }
-            }
-        );
+        setupImagePicker();
 
         // Setup category spinner
         setupCategorySpinner();
@@ -111,7 +122,9 @@ public class AddListActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveItem());
 
         // Setup camera button
-        btnScanCamera.setOnClickListener(v -> checkCameraPermissionAndOpen());
+        btnScanCamera.setOnClickListener(v -> {
+            checkCameraPermissionAndOpen();
+        });
 
         // Set up bottom navigation
         setupBottomNavigation();
@@ -121,24 +134,54 @@ public class AddListActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             // Request camera permission
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, 100);
+            ActivityCompat.requestPermissions(this, 
+                new String[]{Manifest.permission.CAMERA}, 100);
         } else {
             openCamera();
         }
     }
 
     private void openCamera() {
-        ImagePicker.with(this)
-                .crop()
-                .compress(1024)
-                .maxResultSize(1080, 1080)
-                .createIntent(intent -> {
-                    intent.setAction(Intent.ACTION_GET_CONTENT);
-                    intent.setType("image/*");
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/jpeg", "image/png"});
-                    imagePickerLauncher.launch(intent);
-                    return null;
-                });
+        // Double-check permission before proceeding
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        
+        // Create a file to save the image
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+            Log.e("AddListActivity", "Error creating image file", ex);
+            Toast.makeText(this, "Error creating image file", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Continue only if the file was successfully created
+        if (photoFile != null) {
+            photoUri = FileProvider.getUriForFile(this,
+                    "com.example.freshtrack.fileprovider",
+                    photoFile);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            imagePickerLauncher.launch(takePictureIntent);
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+        return image;
     }
 
     @Override
@@ -305,31 +348,28 @@ public class AddListActivity extends AppCompatActivity {
         Log.d("AddListActivity", "Attempting to save food item: " + foodName + " for user: " + userId);
         
         firebaseModel.addFoodItem(foodItem)
-            .addOnSuccessListener(aVoid -> {
-                Log.d("AddListActivity", "Food item saved successfully");
-                // Schedule notification for the new item
-                String notificationId = firebaseModel.getNewNotificationId();
-                if (notificationId != null) {
-                    NotificationHelper notificationHelper = new NotificationHelper(this);
-                    notificationHelper.scheduleNotification(
-                        userId,
-                        foodName,
-                        notificationId,
-                        expiryTimestamp
-                    );
+            .addOnSuccessListener(documentReference -> {
+                Toast.makeText(this, "Food item added successfully", Toast.LENGTH_SHORT).show();
+                
+                // Check if item is expiring soon and create notification if needed
+                if (isExpiringSoon(foodItem)) {
+                    firebaseModel.createNotification(userId, foodItem);
                 }
-                Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
-                // Navigate to home page
-                Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
+                
                 finish();
             })
             .addOnFailureListener(e -> {
-                Log.e("AddListActivity", "Error saving food item", e);
-                Toast.makeText(this, "Error saving food item: " + e.getMessage(), 
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error adding food item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
+    }
+
+    private boolean isExpiringSoon(FoodItem item) {
+        // Get current time
+        long currentTime = System.currentTimeMillis();
+        
+        // Check if expiry date is within the next 3 days (or your preferred threshold)
+        long threeDaysInMillis = 3 * 24 * 60 * 60 * 1000L;
+        return (item.getExpiryDate() - currentTime) <= threeDaysInMillis;
     }
 
     private void setupBottomNavigation() {
@@ -371,5 +411,146 @@ public class AddListActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void setupImagePicker() {
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    if (photoUri != null) {
+                        // We have a full-size photo from the camera
+                        String imagePath = photoUri.getPath();
+                        if (imagePath != null) {
+                            processImageForTextRecognition(imagePath);
+                        }
+                    } else {
+                        // Handle gallery selection
+                        Intent data = result.getData();
+                        if (data != null && data.getData() != null) {
+                            Uri uri = data.getData();
+                            String imagePath = getPathFromUri(uri);
+                            if (imagePath != null) {
+                                processImageForTextRecognition(imagePath);
+                            } else {
+                                Toast.makeText(this, "Failed to get image", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                }
+            });
+    }
+
+    private String getPathFromUri(Uri uri) {
+        try {
+            String[] projection = {android.provider.MediaStore.Images.Media.DATA};
+            android.database.Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+            if (cursor == null) return null;
+            int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            String path = cursor.getString(column_index);
+            cursor.close();
+            return path;
+        } catch (Exception e) {
+            Log.e("AddListActivity", "Error getting path from URI", e);
+            return null;
+        }
+    }
+
+    private void processImageForTextRecognition(String imagePath) {
+        // Show loading state
+        Toast.makeText(this, "Analyzing image...", Toast.LENGTH_SHORT).show();
+
+        // Create file object from image path
+        File file = new File(imagePath);
+
+        // Create RequestBody instance from file
+        RequestBody requestFile = RequestBody.create(file, MediaType.parse("image/*"));
+
+        // Create MultipartBody.Part using file request-body
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+        Log.d("Debug", "added to body");
+        // Create Retrofit instance
+        Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl("http://127.0.0.1:8000/")  // Replace with your computer's IP address
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
+
+        // Create API interface instance
+        PredictionApi api = retrofit.create(PredictionApi.class);
+        Log.d("Debug", "predicting image");
+        // Make API call
+        api.predictImage(body).enqueue(new Callback<PredictionResponse>() {
+            @Override
+            public void onResponse(Call<PredictionResponse> call, Response<PredictionResponse> response) {
+                Log.d("Debug", "response");
+                if (response.isSuccessful() && response.body() != null) {
+                    String prediction = response.body().getPrediction();
+                    
+                    // Update food name field
+                    etFoodName.setText(prediction);
+                    
+                    // Calculate and set expiry date based on the food type
+                    setExpiryDateForFood(prediction);
+                } else {
+                    Toast.makeText(AddListActivity.this, 
+                        "Error analyzing image", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PredictionResponse> call, Throwable t) {
+                Toast.makeText(AddListActivity.this, 
+                    "Failed to connect to server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setExpiryDateForFood(String foodName) {
+        // Get current date
+        Calendar calendar = Calendar.getInstance();
+        
+        // Add days based on food type
+        int daysToAdd = getFoodExpiryDays(foodName.toLowerCase());
+        calendar.add(Calendar.DAY_OF_MONTH, daysToAdd);
+        
+        // Set the calculated date
+        this.selectedExpiryDate = calendar.getTimeInMillis();
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        etExpiryDate.setText(sdf.format(calendar.getTime()));
+    }
+
+    private int getFoodExpiryDays(String foodName) {
+        // Define expiry days for different foods
+        Map<String, Integer> expiryDays = new HashMap<>();
+        expiryDays.put("apple", 14);
+        expiryDays.put("banana", 5);
+        expiryDays.put("orange", 10);
+        expiryDays.put("avocado", 7);
+        expiryDays.put("mango", 7);
+        expiryDays.put("strawberry", 5);
+        expiryDays.put("tomato", 7);
+        expiryDays.put("cucumber", 7);
+        expiryDays.put("carrot", 21);
+        // Add more foods as needed
+        
+        return expiryDays.getOrDefault(foodName, 7); // Default 7 days if not found
+    }
+
+    private File saveBitmapToFile(Bitmap bitmap) {
+        try {
+            File outputDir = getCacheDir();
+            File outputFile = File.createTempFile("camera_image", ".jpg", outputDir);
+            
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(outputFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+            
+            return outputFile;
+        } catch (Exception e) {
+            Log.e("AddListActivity", "Error saving bitmap to file", e);
+            return null;
+        }
     }
 }
