@@ -31,7 +31,6 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-import com.github.dhaval2404.imagepicker.ImagePicker;
 import android.net.Uri;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -56,7 +55,6 @@ import androidx.core.app.ActivityCompat;
 import okhttp3.OkHttpClient;
 import java.util.concurrent.TimeUnit;
 import okhttp3.logging.HttpLoggingInterceptor;
-import okhttp3.Request;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -646,20 +644,116 @@ public class AddListActivity extends AppCompatActivity {
     }
 
     private int getFoodExpiryDays(String foodName) {
-        // Define expiry days for different foods
-        Map<String, Integer> expiryDays = new HashMap<>();
-        expiryDays.put("apple", 14);
-        expiryDays.put("banana", 5);
-        expiryDays.put("orange", 10);
-        expiryDays.put("avocado", 7);
-        expiryDays.put("mango", 7);
-        expiryDays.put("strawberry", 5);
-        expiryDays.put("tomato", 7);
-        expiryDays.put("cucumber", 7);
-        expiryDays.put("carrot", 21);
-        // Add more foods as needed
+        // Normalize the food name to lowercase for case-insensitive matching
+        String normalizedName = foodName.toLowerCase();
         
-        return expiryDays.getOrDefault(foodName, 7); // Default 7 days if not found
+        // Check for specific food types and return appropriate expiry days
+        if (normalizedName.contains("milk") || normalizedName.contains("dairy")) {
+            return 7; // 7 days for milk and dairy products
+        } else if (normalizedName.contains("bread")) {
+            return 5; // 5 days for bread
+        } else if (normalizedName.contains("meat") || normalizedName.contains("chicken") || 
+                   normalizedName.contains("beef") || normalizedName.contains("pork")) {
+            return 3; // 3 days for meat
+        } else if (normalizedName.contains("fish") || normalizedName.contains("seafood") || 
+                   normalizedName.contains("salmon")) {
+            return 2; // 2 days for fish and seafood
+        } else if (normalizedName.contains("banana")) {
+            return 5; // 5 days for bananas
+        } else if (normalizedName.contains("apple")) {
+            return 14; // 14 days for apples
+        } else if (normalizedName.contains("orange") || normalizedName.contains("citrus")) {
+            return 14; // 14 days for oranges and citrus fruits
+        } else if (normalizedName.contains("berries") || normalizedName.contains("strawberries")) {
+            return 5; // 5 days for berries
+        } else if (normalizedName.contains("lettuce") || normalizedName.contains("leafy greens") || 
+                   normalizedName.contains("spinach") || normalizedName.contains("salad-leaf") || 
+                   normalizedName.contains("mixed-salad")) {
+            return 5; // 5 days for lettuce and leafy greens
+        } else if (normalizedName.contains("tomato")) {
+            return 7; // 7 days for tomatoes
+        } else if (normalizedName.contains("potato") || normalizedName.contains("potatoes")) {
+            return 21; // 21 days for potatoes
+        } else if (normalizedName.contains("onion")) {
+            return 30; // 30 days for onions
+        } else if (normalizedName.contains("carrot")) {
+            return 21; // 21 days for carrots
+        } else if (normalizedName.contains("egg")) {
+            return 28; // 28 days for eggs
+        } else if (normalizedName.contains("cheese")) {
+            return 14; // 14 days for cheese
+        } else if (normalizedName.contains("yogurt")) {
+            return 10; // 10 days for yogurt
+        } else if (normalizedName.contains("juice")) {
+            return 7; // 7 days for juice
+        } else if (normalizedName.contains("almonds") || normalizedName.contains("mixed-nuts")) {
+            return 180; // 180 days (6 months) for nuts
+        } else if (normalizedName.contains("avocado")) {
+            return 5; // 5 days for avocados
+        } else if (normalizedName.contains("beer")) {
+            return 180; // 180 days (6 months) for beer
+        } else if (normalizedName.contains("biscuits")) {
+            return 60; // 60 days for biscuits
+        } else if (normalizedName.contains("boisson-au-glucose")) {
+            return 365; // 365 days for glucose drinks
+        } else if (normalizedName.contains("broccoli")) {
+            return 7; // 7 days for broccoli
+        } else if (normalizedName.contains("butter")) {
+            return 30; // 30 days for butter
+        } else if (normalizedName.contains("corn")) {
+            return 5; // 5 days for fresh corn
+        } else if (normalizedName.contains("croissant")) {
+            return 3; // 3 days for croissants
+        } else if (normalizedName.contains("cucumber")) {
+            return 7; // 7 days for cucumber
+        } else if (normalizedName.contains("chocolate")) {
+            return 180; // 180 days for chocolate
+        } else if (normalizedName.contains("coffee") || normalizedName.contains("espresso") || 
+                   normalizedName.contains("tea")) {
+            return 365; // 365 days for coffee and tea
+        } else if (normalizedName.contains("beans") || normalizedName.contains("french-beans")) {
+            return 7; // 7 days for beans
+        } else if (normalizedName.contains("gruyere") || normalizedName.contains("parmesan") || 
+                   normalizedName.contains("hard-cheese")) {
+            return 60; // 60 days for hard cheese
+        } else if (normalizedName.contains("ham-raw")) {
+            return 3; // 3 days for raw ham
+        } else if (normalizedName.contains("honey")) {
+            return 730; // 730 days (2 years) for honey
+        } else if (normalizedName.contains("jam")) {
+            return 365; // 365 days for jam
+        } else if (normalizedName.contains("mandarine")) {
+            return 14; // 14 days for mandarines
+        } else if (normalizedName.contains("mayonnaise")) {
+            return 60; // 60 days for mayonnaise
+        } else if (normalizedName.contains("mixed-vegetables")) {
+            return 5; // 5 days for mixed vegetables
+        } else if (normalizedName.contains("pasta") || normalizedName.contains("spaghetti")) {
+            return 730; // 730 days (2 years) for dry pasta
+        } else if (normalizedName.contains("pickle")) {
+            return 365; // 365 days for pickles
+        } else if (normalizedName.contains("pizza")) {
+            return 3; // 3 days for cooked pizza
+        } else if (normalizedName.contains("rice")) {
+            return 730; // 730 days (2 years) for uncooked rice
+        } else if (normalizedName.contains("salami")) {
+            return 21; // 21 days for salami
+        } else if (normalizedName.contains("sauce")) {
+            return 14; // 14 days for sauces
+        } else if (normalizedName.contains("soft-cheese")) {
+            return 14; // 14 days for soft cheese
+        } else if (normalizedName.contains("sweet-pepper")) {
+            return 14; // 14 days for sweet peppers
+        } else if (normalizedName.contains("water")) {
+            return 365; // 365 days for water
+        } else if (normalizedName.contains("wine")) {
+            return 730; // 730 days (2 years) for wine
+        } else if (normalizedName.contains("zucchini")) {
+            return 7; // 7 days for zucchini
+        }
+        
+        // Default expiry time if no specific match is found
+        return 7; // Default to 7 days
     }
 
     private File saveBitmapToFile(Bitmap bitmap) {
