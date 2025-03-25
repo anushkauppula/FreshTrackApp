@@ -16,6 +16,7 @@
 
     <application
         android:name=".FreshTrackApplication"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -25,7 +26,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FreshTrack"
         android:requestLegacyExternalStorage="true"
-        android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
         
         <activity

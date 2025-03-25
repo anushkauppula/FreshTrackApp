@@ -53,6 +53,10 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
 import androidx.core.app.ActivityCompat;
+import okhttp3.OkHttpClient;
+import java.util.concurrent.TimeUnit;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.Request;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -155,6 +159,7 @@ public class AddListActivity extends AppCompatActivity {
         File photoFile = null;
         try {
             photoFile = createImageFile();
+            Log.d("Camera", "Created image file: " + photoFile.getAbsolutePath());
         } catch (IOException ex) {
             Log.e("AddListActivity", "Error creating image file", ex);
             Toast.makeText(this, "Error creating image file", Toast.LENGTH_SHORT).show();
@@ -166,6 +171,7 @@ public class AddListActivity extends AppCompatActivity {
             photoUri = FileProvider.getUriForFile(this,
                     "com.example.freshtrack.fileprovider",
                     photoFile);
+            Log.d("Camera", "Photo URI: " + photoUri.toString());
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             imagePickerLauncher.launch(takePictureIntent);
         }
@@ -427,9 +433,13 @@ public class AddListActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     if (photoUri != null) {
                         // We have a full-size photo from the camera
-                        String imagePath = photoUri.getPath();
+                        // Convert content URI to file path
+                        String imagePath = getRealPathFromURI(photoUri);
                         if (imagePath != null) {
+                            Log.d("Camera", "Image path: " + imagePath);
                             processImageForTextRecognition(imagePath);
+                            // Reset photoUri after processing
+                            photoUri = null;
                         }
                     } else {
                         // Handle gallery selection
@@ -446,6 +456,68 @@ public class AddListActivity extends AppCompatActivity {
                     }
                 }
             });
+    }
+
+    private String getRealPathFromURI(Uri contentUri) {
+        try {
+            if (contentUri.getPath().startsWith("/storage/")) {
+                // If it's already a file path, return it directly
+                return contentUri.getPath();
+            }
+            
+            // For content URIs, use FileProvider to get a file path
+            if (contentUri.toString().startsWith("content://")) {
+                // For camera photos taken with our app, we can directly use the path
+                if (photoUri != null && contentUri.equals(photoUri)) {
+                    // Get the path from the URI directly
+                    String path = contentUri.getPath();
+                    if (path != null && new File(path).exists()) {
+                        return path;
+                    }
+                    
+                    // Try to get the path from the URI's last path segment
+                    String fileName = contentUri.getLastPathSegment();
+                    if (fileName != null) {
+                        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                        File[] files = storageDir.listFiles();
+                        if (files != null) {
+                            for (File file : files) {
+                                if (file.getName().contains(fileName)) {
+                                    return file.getAbsolutePath();
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // For other content URIs, try to create a temporary file
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), contentUri);
+                    File tempFile = saveBitmapToFile(bitmap);
+                    if (tempFile != null) {
+                        return tempFile.getAbsolutePath();
+                    }
+                } catch (Exception e) {
+                    Log.e("AddListActivity", "Error creating bitmap from content URI", e);
+                }
+            }
+            
+            return null;
+        } catch (Exception e) {
+            Log.e("AddListActivity", "Error getting real path from URI", e);
+            
+            // Fallback: try to use the file path directly from the URI
+            try {
+                File file = new File(contentUri.getPath());
+                if (file.exists()) {
+                    return file.getAbsolutePath();
+                }
+            } catch (Exception ex) {
+                Log.e("AddListActivity", "Fallback path retrieval failed", ex);
+            }
+            
+            return null;
+        }
     }
 
     private String getPathFromUri(Uri uri) {
@@ -467,50 +539,96 @@ public class AddListActivity extends AppCompatActivity {
     private void processImageForTextRecognition(String imagePath) {
         // Show loading state
         Toast.makeText(this, "Analyzing image...", Toast.LENGTH_SHORT).show();
+        Log.d("API", "Processing image: " + imagePath);
+
+        // Variable to hold the final path
+        String finalPath = imagePath;
+
+        // If imagePath is null, try to use photoUri directly
+        if (imagePath == null && photoUri != null) {
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), photoUri);
+                if (bitmap != null) {
+                    // Save bitmap to a temporary file
+                    File tempFile = saveBitmapToFile(bitmap);
+                    if (tempFile != null) {
+                        imagePath = tempFile.getAbsolutePath();
+                        finalPath = tempFile.getAbsolutePath();
+                        Log.d("API", "Created temporary file from URI: " + imagePath);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("API", "Error creating bitmap from URI", e);
+            }
+        }
+
+        // Create a final copy for use in callbacks
+        final String finalImagePath = finalPath;
 
         // Create file object from image path
         File file = new File(imagePath);
-
-        // Create RequestBody instance from file
-        RequestBody requestFile = RequestBody.create(file, MediaType.parse("image/*"));
-
-        // Create MultipartBody.Part using file request-body
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
-        Log.d("Debug", "added to body");
-        // Create Retrofit instance
-        Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl("http://127.0.0.1:8000/")  // Replace with your computer's IP address
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-
-        // Create API interface instance
-        PredictionApi api = retrofit.create(PredictionApi.class);
-        Log.d("Debug", "predicting image");
-        // Make API call
-        api.predictImage(body).enqueue(new Callback<PredictionResponse>() {
-            @Override
-            public void onResponse(Call<PredictionResponse> call, Response<PredictionResponse> response) {
-                Log.d("Debug", "response");
-                if (response.isSuccessful() && response.body() != null) {
-                    String prediction = response.body().getPrediction();
-                    
-                    // Update food name field
-                    etFoodName.setText(prediction);
-                    
-                    // Calculate and set expiry date based on the food type
-                    setExpiryDateForFood(prediction);
-                } else {
-                    Toast.makeText(AddListActivity.this, 
-                        "Error analyzing image", Toast.LENGTH_SHORT).show();
+        if (!file.exists()) {
+            Log.e("API", "File does not exist: " + imagePath);
+            
+            // Try to use the photoUri directly as a fallback
+            if (photoUri != null) {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), photoUri);
+                    processImageLocally(bitmap);
+                    return;
+                } catch (Exception e) {
+                    Log.e("API", "Error processing URI directly", e);
                 }
             }
+            
+            Toast.makeText(this, "Image file not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Send the image to the external API
+        try {
+            Log.d("API", "Sending image to external API: " + imagePath);
+            
+            // Skip connectivity test and directly send the image
+            sendImageToApi(file, finalImagePath);
+        } catch (Exception e) {
+            Log.e("API", "Error in connectivity test: " + e.getMessage(), e);
+            Toast.makeText(this, "Error connecting to server", Toast.LENGTH_SHORT).show();
+            processImageLocallyFromPath(finalImagePath);
+        }
+    }
 
-            @Override
-            public void onFailure(Call<PredictionResponse> call, Throwable t) {
-                Toast.makeText(AddListActivity.this, 
-                    "Failed to connect to server", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void processImageLocally(Bitmap bitmap) {
+        try {
+            Log.d("API", "Processing bitmap directly");
+            
+            InputImage image = InputImage.fromBitmap(bitmap, 0);
+            textRecognizer.process(image)
+                .addOnSuccessListener(visionText -> {
+                    String text = visionText.getText();
+                    if (!text.isEmpty()) {
+                        // Extract the first line or word as the food name
+                        String foodName = text.split("\n")[0].trim();
+                        Log.d("API", "Local text recognition result: " + foodName);
+                        
+                        // Update food name field
+                        etFoodName.setText(foodName);
+                        
+                        // Calculate and set expiry date based on the food type
+                        setExpiryDateForFood(foodName);
+                    } else {
+                        Toast.makeText(AddListActivity.this, 
+                            "No text found in image", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("API", "Local text recognition failed", e);
+                    Toast.makeText(AddListActivity.this, 
+                        "Failed to process image", Toast.LENGTH_SHORT).show();
+                });
+        } catch (Exception e) {
+            Log.e("API", "Error in local processing", e);
+        }
     }
 
     private void setExpiryDateForFood(String foodName) {
@@ -558,6 +676,110 @@ public class AddListActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("AddListActivity", "Error saving bitmap to file", e);
             return null;
+        }
+    }
+
+    private void processImageLocallyFromPath(String imagePath) {
+        try {
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            if (bitmap != null) {
+                processImageLocally(bitmap);
+            } else {
+                Log.e("API", "Failed to decode bitmap from file: " + imagePath);
+                Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Log.e("API", "Error in local processing from path", e);
+        }
+    }
+
+    private void sendImageToApi(File file, String finalImagePath) {
+        try {
+            // Create RequestBody instance from file
+            RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), file);
+            
+            // Create MultipartBody.Part using file request-body
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+            Log.d("API", "Created multipart request body");
+            
+            // Create OkHttpClient with longer timeouts
+            OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .build();
+            
+            // Create Retrofit instance
+            Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.1.176:8000/")
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+            
+            Log.d("API", "Making request to: http://192.168.1.176:8000/predict");
+            
+            // Create API interface instance
+            PredictionApi api = retrofit.create(PredictionApi.class);
+            
+            // Make API call
+            api.predictImage(body).enqueue(new Callback<PredictionResponse>() {
+                @Override
+                public void onResponse(Call<PredictionResponse> call, Response<PredictionResponse> response) {
+                    Log.d("API", "Response received, code: " + response.code());
+                    
+                    if (!response.isSuccessful()) {
+                        try {
+                            Log.e("API", "Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            Log.e("API", "Could not read error body");
+                        }
+                        // Fall back to local processing
+                        processImageLocallyFromPath(finalImagePath);
+                        return;
+                    }
+                    
+                    if (response.isSuccessful() && response.body() != null) {
+                        String prediction = response.body().getPrediction();
+                        Log.d("API", "Prediction: " + prediction);
+                        
+                        if (prediction != null && !prediction.isEmpty()) {
+                            // Update food name field
+                            etFoodName.setText(prediction);
+                            
+                            // Calculate and set expiry date based on the food type
+                            setExpiryDateForFood(prediction);
+                        } else {
+                            Log.e("API", "Empty prediction received");
+                            processImageLocallyFromPath(finalImagePath);
+                        }
+                    } else {
+                        Toast.makeText(AddListActivity.this, 
+                            "Error analyzing image", Toast.LENGTH_SHORT).show();
+                        processImageLocallyFromPath(finalImagePath);
+                    }
+                }
+                
+                @Override
+                public void onFailure(Call<PredictionResponse> call, Throwable t) {
+                    Log.e("API", "Request failed", t);
+                    Log.e("API", "URL: " + call.request().url());
+                    Log.e("API", "Error message: " + t.getMessage());
+                    Log.e("API", "Error cause: " + (t.getCause() != null ? t.getCause().getMessage() : "unknown"));
+                    Toast.makeText(AddListActivity.this, 
+                        "Failed to connect to server", Toast.LENGTH_SHORT).show();
+                    
+                    // Fall back to local processing
+                    processImageLocallyFromPath(finalImagePath);
+                }
+            });
+        } catch (Exception e) {
+            Log.e("API", "Error processing image: " + e.getMessage(), e);
+            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
+            // Fall back to local processing
+            processImageLocallyFromPath(finalImagePath);
         }
     }
 }
