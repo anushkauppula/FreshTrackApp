@@ -348,18 +348,25 @@ public class AddListActivity extends AppCompatActivity {
         Log.d("AddListActivity", "Attempting to save food item: " + foodName + " for user: " + userId);
         
         firebaseModel.addFoodItem(foodItem)
-            .addOnSuccessListener(documentReference -> {
-                Toast.makeText(this, "Food item added successfully", Toast.LENGTH_SHORT).show();
-                
-                // Check if item is expiring soon and create notification if needed
-                if (isExpiringSoon(foodItem)) {
-                    firebaseModel.createNotification(userId, foodItem);
-                }
-                
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("AddListActivity", "Food item saved successfully");
+                    // Schedule notification for the new item
+                    String notificationId = firebaseModel.getNewNotificationId();
+                    if (notificationId != null) {
+                        NotificationHelper notificationHelper = new NotificationHelper(this);
+                        notificationHelper.scheduleNotification(
+                                userId,
+                                foodName,
+                                notificationId,
+                                expiryTimestamp
+                        );
+                    }
                 finish();
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(this, "Error adding food item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("AddListActivity", "Error saving food item", e);
+                Toast.makeText(this, "Error saving food item: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show();
             });
     }
 
