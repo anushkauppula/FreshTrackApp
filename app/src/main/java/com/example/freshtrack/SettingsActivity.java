@@ -224,6 +224,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void signOut() {
+        // Clear login state
+        getSharedPreferences("FreshTrackPrefs", MODE_PRIVATE)
+            .edit()
+            .putBoolean("isLoggedIn", false)
+            .apply();
+            
         FirebaseAuth.getInstance().signOut();
         Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
