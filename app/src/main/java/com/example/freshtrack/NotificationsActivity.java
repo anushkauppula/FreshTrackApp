@@ -3,8 +3,11 @@ package com.example.freshtrack;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +25,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView notificationsRecyclerView;
     private TextView noNotificationsText;
     private FirebaseModel firebaseModel;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,10 +39,39 @@ public class NotificationsActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Notifications");
         }
 
+        mAuth = FirebaseAuth.getInstance();
         firebaseModel = new FirebaseModel();
         initializeViews();
         loadNotifications();
         setupBottomNavigation();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_notifications, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_clear_all) {
+            clearAllNotifications();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void clearAllNotifications() {
+        String userId = mAuth.getCurrentUser().getUid();
+        firebaseModel.clearAllNotifications(userId)
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(this, "All notifications cleared", Toast.LENGTH_SHORT).show();
+                // The UI will be automatically updated through the ValueEventListener
+            })
+            .addOnFailureListener(e -> {
+                Log.e("NotificationsActivity", "Error clearing notifications: " + e.getMessage());
+                Toast.makeText(this, "Failed to clear notifications", Toast.LENGTH_SHORT).show();
+            });
     }
 
     private void initializeViews() {
