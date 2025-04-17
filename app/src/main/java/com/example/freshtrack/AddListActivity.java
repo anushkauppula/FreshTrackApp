@@ -46,15 +46,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import java.util.Map;
 import java.util.HashMap;
 import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
 import androidx.core.app.ActivityCompat;
-import okhttp3.OkHttpClient;
 import java.util.concurrent.TimeUnit;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class AddListActivity extends AppCompatActivity {
 
@@ -365,7 +365,12 @@ public class AddListActivity extends AppCompatActivity {
                                 expiryTimestamp
                         );
                     }
-                finish();
+                    Toast.makeText(this, "Food item saved successfully", Toast.LENGTH_SHORT).show();
+                    // Navigate to home page
+                    Intent intent = new Intent(AddListActivity.this, MainActivityHome.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
             })
             .addOnFailureListener(e -> {
                 Log.e("AddListActivity", "Error saving food item", e);

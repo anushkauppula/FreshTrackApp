@@ -1,6 +1,9 @@
 package com.example.freshtrack.api;
 
+import com.google.gson.annotations.SerializedName;
+
 public class PredictionResponse {
+    @SerializedName("prediction")
     private String prediction;
     private boolean success;
     private String message;
