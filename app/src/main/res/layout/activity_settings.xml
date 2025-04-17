@@ -174,6 +174,30 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Toggle for Show Delete Confirmation -->
+            <Switch
+                android:id="@+id/switchShowDeleteConfirmation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show Delete Confirmation"
+                android:textSize="16sp"
+                android:trackTint="@color/logo_primary"
+                android:thumbTint="@color/logo_primary"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Toggle for Notifications Enabled -->
+            <Switch
+                android:id="@+id/switchNotificationsEnabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notifications Enabled"
+                android:textSize="16sp"
+                android:trackTint="@color/logo_primary"
+                android:thumbTint="@color/logo_primary"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="8dp"/>
+
             <!-- Sign Out Section -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/signOutCard"

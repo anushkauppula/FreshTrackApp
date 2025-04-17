@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +29,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.Calendar;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+import com.example.freshtrack.models.UserSettings;
 
 public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodItemViewHolder> {
     private List<FoodItem> foodItems;
@@ -152,36 +158,97 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
     public void handleSwipeDeletion(int position) {
         if (position != RecyclerView.NO_POSITION && position < foodItems.size()) {
             FoodItem item = foodItems.get(position);
-            showDeleteConfirmationDialog(item, context, position);
+            handleItemDeletion(item, context, position);
         }
     }
 
-    private void showDeleteConfirmationDialog(FoodItem item, Context context, int swipedPosition) {
+    private void showDeleteConfirmationDialog(FoodItem item, Context context, int swipedPosition, boolean showDialog) {
+        if (!showDialog) {
+            deleteItem(item, context);
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_confirmation, null);
-        CheckBox checkBox = dialogView.findViewById(R.id.checkboxDontShowAgain);
+        CheckBox checkboxDontShowAgain = dialogView.findViewById(R.id.checkboxDontShowAgain);
         TextView messageText = dialogView.findViewById(R.id.dialogMessage);
         messageText.setText("Are you sure you want to delete " + item.getName() + "?");
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setTitle("Delete Item")
-                .setView(dialogView)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    if (checkBox.isChecked()) {
-                        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                        preferences.edit().putBoolean(KEY_DONT_SHOW_AGAIN, true).apply();
+        builder.setView(dialogView)
+            .setTitle("Delete Confirmation")
+            .setPositiveButton("Ok", (dialog, which) -> {
+                // Perform deletion
+                deleteItem(item, context);
+            })
+            .setNegativeButton("Cancel", (dialog, which) -> {
+                // If this was triggered by a swipe, restore the view
+                if (swipedPosition != -1) {
+                    notifyItemChanged(swipedPosition);
+                }
+            })
+            .show();
+
+        // If the checkbox is checked, turn off the toggle in settings
+        checkboxDontShowAgain.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // Turn off the toggle in settings
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (currentUser != null) {
+                    String userId = currentUser.getUid();
+                    firebaseModel.updateUserSettings(userId, Collections.singletonMap("showDeleteConfirmation", false));
+                }
+            }
+        });
+    }
+
+    public void deleteItem(FoodItem item, Context context) {
+        // Remove the item from the list
+        foodItems.remove(item);
+        notifyDataSetChanged(); // Notify the adapter to refresh the view
+
+        // Optionally, delete the item from the Firebase database
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        firebaseModel.deleteFoodItem(userId, item.getId()) // Assuming FoodItem has a method getId()
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show();
+            })
+            .addOnFailureListener(e -> {
+                Log.e("FoodItemAdapter", "Error deleting item: " + e.getMessage());
+                Toast.makeText(context, "Error deleting item", Toast.LENGTH_SHORT).show();
+            });
+    }
+
+    void handleItemDeletion(FoodItem item, Context context, int swipedPosition) {
+        // Get the current user
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+
+            // Check the "Show Delete Confirmation" setting from the database
+            firebaseModel.getUserSettings(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            UserSettings settings = dataSnapshot.getValue(UserSettings.class);
+                            if (settings != null) {
+                                boolean showDeleteConfirmation = settings.isShowDeleteConfirmation();
+                                showDeleteConfirmationDialog(item, context, swipedPosition, showDeleteConfirmation);
+                            }
+                        } else {
+                            // If user settings do not exist, delete directly
+                            deleteItem(item, context);
+                        }
                     }
-                    new FoodItemViewHolder(
-                        LayoutInflater.from(context).inflate(R.layout.item_food, null)
-                    ).deleteItem(item, context);
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                    // If this was triggered by a swipe, restore the view
-                    if (swipedPosition != -1) {
-                        notifyItemChanged(swipedPosition);
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("FoodItemAdapter", "Error loading user settings: " + error.getMessage());
+                        // Optionally delete directly if there's an error
+                        deleteItem(item, context);
                     }
                 });
-
-        builder.create().show();
+        }
     }
 
     class FoodItemViewHolder extends RecyclerView.ViewHolder {
@@ -206,60 +273,7 @@ public class FoodItemAdapter extends RecyclerView.Adapter<FoodItemAdapter.FoodIt
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
-                    handleItemDeletion(foodItems.get(position), context);
-                }
-            });
-        }
-
-        void handleItemDeletion(FoodItem item, Context context) {
-            SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            boolean dontShowDialog = preferences.getBoolean(KEY_DONT_SHOW_AGAIN, false);
-
-            if (dontShowDialog) {
-                // If user chose to not show dialog, delete directly
-                deleteItem(item, context);
-            } else {
-                showDeleteConfirmationDialog(item, context, -1);
-            }
-        }
-
-        private void deleteItem(FoodItem item, Context context) {
-            // Store the item temporarily for undo
-            String itemName = item.getName();
-            String itemId = item.getId();
-            String userId = item.getUserId();
-
-            // Remove the item from the list temporarily
-            foodItemsFiltered.remove(item);
-            notifyDataSetChanged();
-
-            // Show Snackbar for undo
-            Snackbar snackbar = Snackbar.make(((MainActivityHome) context).findViewById(R.id.bottomNav),
-                    itemName + " deleted", Snackbar.LENGTH_LONG)
-                    .setAction("UNDO", v -> {
-                        // Restore the item
-                        foodItemsFiltered.add(item);
-                        notifyItemInserted(foodItemsFiltered.size() - 1);
-                        firebaseModel.addFoodItem(item);
-                    });
-
-            snackbar.setActionTextColor(context.getResources().getColor(android.R.color.holo_blue_light));
-            snackbar.setAnchorView(((MainActivityHome) context).findViewById(R.id.bottomNav));
-            snackbar.show();
-
-            snackbar.addCallback(new Snackbar.Callback() {
-                @Override
-                public void onDismissed(Snackbar transientBottomBar, int event) {
-                    if (event != Snackbar.Callback.DISMISS_EVENT_ACTION) {
-                        firebaseModel.deleteFoodItem(userId, itemId)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(context, "Item deleted permanently", Toast.LENGTH_SHORT).show();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(context, "Failed to delete item: " + e.getMessage(),
-                                            Toast.LENGTH_SHORT).show();
-                                });
-                    }
+                    handleItemDeletion(foodItems.get(position), context, position);
                 }
             });
         }

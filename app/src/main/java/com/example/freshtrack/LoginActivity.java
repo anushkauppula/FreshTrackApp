@@ -2,6 +2,7 @@ package com.example.freshtrack;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -30,10 +31,24 @@ public class LoginActivity extends AppCompatActivity {
     private TextView forgotPasswordPrompt;
     private FirebaseAuth mAuth;
     private FirebaseModel firebaseModel;
+    private static final String PREFS_NAME = "FreshTrackPrefs";
+    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Check if user is already logged in
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isLoggedIn = prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+        
+        if (isLoggedIn && FirebaseAuth.getInstance().getCurrentUser() != null) {
+            // User is already logged in, redirect to Dashboard
+            startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
+            finish();
+            return;
+        }
+        
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
@@ -166,6 +181,10 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "signInWithEmail:success");
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user != null) {
+                        // Save login state
+                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                        prefs.edit().putBoolean(KEY_IS_LOGGED_IN, true).apply();
+                        
                         // Schedule notifications for existing items
                         scheduleNotificationsForUser(user.getUid());
                         startActivity(new Intent(LoginActivity.this, DashboardActivity.class));

@@ -83,11 +83,11 @@
             android:backgroundTint="@color/logo_primary"
             android:text="Save"/>
 
-        <Button
-            android:id="@+id/btnScanBarcode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Scan Barcode"/>
+<!--        <Button-->
+<!--            android:id="@+id/btnScanBarcode"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Scan Barcode"/>-->
 
         <Button
             android:id="@+id/btnScanCamera"
