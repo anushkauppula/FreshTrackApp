@@ -15,6 +15,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Map;
 import android.util.Log;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 public class FirebaseModel {
     private final DatabaseReference databaseReference;
@@ -212,5 +214,23 @@ public class FirebaseModel {
 
     public Task<Void> markNotificationAsRead(String notificationId) {
         return notificationsRef.child(notificationId).child("read").setValue(true);
+    }
+
+    public Task<Void> clearAllNotifications(String userId) {
+        Log.d("FirebaseModel", "Clearing all notifications for user: " + userId);
+        return notificationsRef.orderByChild("userId").equalTo(userId)
+            .get()
+            .continueWithTask(task -> {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+                
+                List<Task<Void>> deleteTasks = new ArrayList<>();
+                for (DataSnapshot notification : task.getResult().getChildren()) {
+                    deleteTasks.add(notification.getRef().removeValue());
+                }
+                
+                return Tasks.whenAll(deleteTasks);
+            });
     }
 }
