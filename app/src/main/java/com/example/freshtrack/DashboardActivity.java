@@ -33,7 +33,6 @@ public class DashboardActivity extends AppCompatActivity {
     private TextView expiringSoonCount;
     private TextView expiredCount;
     private FirebaseAuth firebaseAuth;
-    private FirebaseFirestore firestore;
     private FirebaseUser currentUser;
     private ValueEventListener statsListener;
     private FirebaseModel firebaseModel;
@@ -46,7 +45,6 @@ public class DashboardActivity extends AppCompatActivity {
 
         // Initialize Firebase
         firebaseAuth = FirebaseAuth.getInstance();
-        firestore = FirebaseFirestore.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
 
         // Check if user is authenticated

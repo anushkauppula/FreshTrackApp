@@ -200,64 +200,6 @@ public class AddListActivity extends AppCompatActivity {
         }
     }
 
-    private void processImage(Uri imageUri) {
-        try {
-            Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-            InputImage image = InputImage.fromBitmap(bitmap, 0);
-            
-            textRecognizer.process(image)
-                    .addOnSuccessListener(text -> {
-                        // Process the recognized text
-                        String recognizedText = text.getText();
-                        // Try to extract information from the recognized text
-                        String[] lines = recognizedText.split("\n");
-                        if (lines.length > 0) {
-                            // Set food name from first line
-                            etFoodName.setText(lines[0]);
-                            
-                            // Try to find weight and count information
-                            for (String line : lines) {
-                                line = line.toLowerCase();
-                                // Look for weight information
-                                if (line.contains("weight") || line.contains("lbs") || line.contains("pounds")) {
-                                    String weight = line.replaceAll("[^0-9.]", "");
-                                    if (!weight.isEmpty()) {
-                                        etWeight.setText(weight);
-                                    }
-                                }
-                                // Look for count information
-                                if (line.contains("count") || line.contains("quantity") || line.contains("qty")) {
-                                    String count = line.replaceAll("[^0-9]", "");
-                                    if (!count.isEmpty()) {
-                                        etCount.setText(count);
-                                    }
-                                }
-                                // Look for date information
-                                if (line.matches(".*\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4}.*")) {
-                                    try {
-                                        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-                                        String dateStr = line.replaceAll("[^0-9/]", "");
-                                        sdf.parse(dateStr);
-                                        etExpiryDate.setText(dateStr);
-                                    } catch (Exception e) {
-                                        // Ignore invalid date formats
-                                    }
-                                }
-                            }
-                            
-                            Toast.makeText(this, "Text recognized successfully", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this, "No text found in image", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Failed to recognize text: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-        } catch (IOException e) {
-            Toast.makeText(this, "Error processing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void setupCategorySpinner() {
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -377,15 +319,6 @@ public class AddListActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error saving food item: " + e.getMessage(),
                         Toast.LENGTH_SHORT).show();
             });
-    }
-
-    private boolean isExpiringSoon(FoodItem item) {
-        // Get current time
-        long currentTime = System.currentTimeMillis();
-        
-        // Check if expiry date is within the next 3 days (or your preferred threshold)
-        long threeDaysInMillis = 3 * 24 * 60 * 60 * 1000L;
-        return (item.getExpiryDate() - currentTime) <= threeDaysInMillis;
     }
 
     private void setupBottomNavigation() {

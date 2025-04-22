@@ -57,11 +57,11 @@ public class FirebaseModel {
             .get();
     }
 
-    public Task<Void> updateUser(String userId, Map<String, Object> updates) {
-        return databaseReference.child(USERS_PATH)
-            .child(userId)
-            .updateChildren(updates);
-    }
+//    public Task<Void> updateUser(String userId, Map<String, Object> updates) {
+//        return databaseReference.child(USERS_PATH)
+//            .child(userId)
+//            .updateChildren(updates);
+//    }
 
     // Modified food item operations to include user ID
     public Task<Void> addFoodItem(FoodItem foodItem) {
